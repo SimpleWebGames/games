@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Duck shooter</title>
+        <meta charset="utf8"/>
+        <style>
+            html, body {
+                height: auto;
+                width: auto;
+                background-image: url("./assets/background2.jpg");
+                background-position: center;
+                margin: 0px;
+                overflow: hidden;
+            }
+            p {
+                font-family: 'Copperplate';
+                font-size: 24px;
+                color: white;
+            }
+            #container {
+                height: 100%;
+                width: 100%;
+                text-align: center;
+            }
+            #uiContainer {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                height: 80px;
+                justify-content: space-evenly;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            #scoreContainer {
+                display: flex;
+                flex-direction: row;
+                width: 20%;
+                text-align: center;
+                justify-content: center;
+            }
+            #button {
+                width: 20%;
+                height: 60px;
+                background-color: #2ed6f0;
+                border-color: white;
+                border-width: 5px;
+                border-radius: 10px;
+                border-style: solid;
+                font-family: 'Copperplate';
+                font-size: 24px;
+                color: white;
+            }
+            #bestScoreContainer {
+                display: flex;
+                flex-direction: row;
+                width: 20%;
+                text-align: center;
+                justify-content: center;
+            }
+            #gameOverUi {
+                position: absolute;
+                top: 50%;
+                left: 0px;
+                right: 0px;
+                display: none;
+                justify-content: center;
+                text-align: center;
+                background-color: black;
+            }
+            #dropdown {
+                position: relative;
+                width: 20%;
+                height: 60px;
+            }
+            #difficultyButton {
+                width: 100%;
+                height: 100%;
+                background-color: black;
+                border-color: #148f09;
+                border-width: 5px;
+                border-radius: 10px;
+                border-style: solid;
+                font-family: monospace;
+                font-size: 24px;
+                color: #148f09;
+            }
+            #dropdown-content {
+                display: none;
+                position: relative;
+                background-color: black;
+                width: 200px;
+                z-index: 1;
+                margin: auto;
+                padding: 10px;
+            }
+            #dropdownContentInner {
+                border-width: 5px;
+                border-style: solid;
+                border-radius: 5px;
+                border-color: #148f09;
+            }
+            #dropdown-content button {
+                background-color: black;
+                font-family: monospace;
+                font-size: 16px;
+                color: #148f09;
+                width: 100%;
+                height: auto;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                display: block;
+                border-style: none;
+            }
+            #dropdown-content button:hover {
+                background-color: #148f09;
+                color: black;
+            }
+            #dropdown:hover #dropdown-content {
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="uiContainer">
+                <button id="button">Play</button>
+                <div id="scoreContainer">
+                    <p>Score:&nbsp;</p>
+                    <p id="score">0</p>
+                </div>
+                <div id="bestScoreContainer">
+                    <p>Best score:&nbsp;</p>
+                    <p id="bestScore">0</p>
+                </div>
+                <div id="bestScoreContainer">
+                    <p>Missed ducks:&nbsp;</p>
+                    <p id="missedDucks">0</p>
+                </div>
+            </div>
+            <div id="gameOverUi">
+                <p>Game over !</p>
+            </div>
+            <canvas id="canvas"></canvas>
+        </div>
+    </body>
+    <script>
+        var height = window.innerHeight - 100;
+        var width = window.innerWidth;
+
+        document.getElementById("canvas").height = height;
+        document.getElementById("canvas").width = width;
+
+        console.log(height, screen.height, document.getElementById("canvas").height);
+
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext("2d");
+        var scoreBox = document.getElementById("score");
+        var missedBox = document.getElementById("missedDucks");
+
+        var interval;
+        var shotCooldown = 0;
+        var cooldown = 0;
+        var score = 0;
+        var missedDucks = 0;
+        var maxDucksOnScreen = 3;
+        var duckPositions = []; // x|y|vector|speed
+        var shotPositions = []; // x|y|time
+        var bloodPositions = []; // x|y|time
+        var cadaverPositions = []; // x|y|type
+        var cursorClickPosition = []; // x, y
+        var buttonAction = "start";
+        var elapsedTime = 0.016;
+
+        var shot = new Image();
+        var blood = new Image();
+        var duck = new Image();
+        var duckBelly = new Image();
+        var duckHead = new Image();
+        var duckAss = new Image();
+        var duckWing = new Image();
+        var duckScreamer = new Image();
+        shot.src = "./assets/shot.png";
+        blood.src = "./assets/blood.png"
+        duck.src = "./assets/duck.png";
+        duckBelly.src = "./assets/duck_belly.png";
+        duckHead.src = "./assets/duck_head.png";
+        duckAss.src = "./assets/duck_ass.png";
+        duckWing.src = "./assets/duck_wing.png";
+        duckScreamer.src = "./assets/duck_front.jpg";
+
+        function randomInt(max, min) {
+            var range = max - min;
+            var number = Math.floor(Math.random() * range);
+            return number + min;
+        }
+
+        function getDuckInfo(index) {
+            var duckInfo = duckPositions[index];
+            var info = duckInfo.split("|");
+            return info;
+        }
+
+        function getShotInfo(index) {
+            var shotInfo = shotPositions[index];
+            var info = shotInfo.split("|");
+            return info;
+        }
+
+        function getBloodInfo(index) {
+            var bloodInfo = bloodPositions[index];
+            var info = bloodInfo.split("|");
+            return info;
+        }
+
+        function getCadaverInfo(index) {
+            var cadaverInfo = cadaverPositions[index];
+            var info = cadaverInfo.split("|");
+            return info;
+        }
+
+        function drawDuck(x, y) {
+            context.drawImage(duck, x, y);
+            //context.beginPath();
+            //context.fillStyle = "blue";
+            //context.fillRect(x, y, 100, 100);
+            //context.stroke();
+        }
+
+        function drawShot(x, y) {
+            context.drawImage(shot, x, y);
+        }
+
+        function drawBlood(x, y) {
+            context.drawImage(blood, x, y);
+        }
+
+        function drawCadaver(type, x, y) {
+            switch(type) {
+                case 0:
+                    context.drawImage(duckHead, x, y);
+                    break;
+                case 1:
+                    context.drawImage(duckBelly, x, y);
+                    break;
+                case 2:
+                    context.drawImage(duckAss, x, y);
+                    break;
+                case 3:
+                    context.drawImage(duckWing, x, y);
+                    break;
+                default:
+                    context.drawImage(duckBelly, x, y);
+                    break;
+            }
+            //context.beginPath();
+            //context.fillStyle = "red";
+            //context.fillRect(x, y, 100, 100);
+            //context.stroke();
+        }
+
+        function updateDucks(elapsedTime) {
+            for(i = 0; i < duckPositions.length; i++) {
+                var info = getDuckInfo(i);
+                var newX = parseFloat(info[0]) + (Math.sin(parseInt(info[2]) * Math.PI/180) * parseInt(info[3]) * elapsedTime);
+                var newY = parseFloat(info[1]) - (Math.cos(parseInt(info[2]) * Math.PI/180) * parseInt(info[3]) * elapsedTime);
+                var newBx = newX + 100;
+                var newBy = newY + 100;
+                if(((newX < -101 || newX > width + 101) || (newY < -101 || newY > height + 101)) && ((newBx < 0 || newBx > width + 101) || (newBy < 0 || newBy > height + 101))) {
+                    duckPositions.splice(i, 1);
+                    missedDucks++;
+                    missedBox.innerHTML = missedDucks;
+                    i--;
+                } else {
+                    var newDuckInfo = newX + "|" + newY + "|" + info[2] + "|" + info[3];
+                    duckPositions[i] = newDuckInfo;
+                    drawDuck(newX, newY);
+                }
+            }
+        }
+
+        function updateSprites(elapsedTime) {
+            var currentTime = Date.now();
+            for(j = 0; j < bloodPositions.length; j++) {
+                var info = getBloodInfo(j);
+                var x = parseFloat(info[0]);
+                var y = parseFloat(info[1]);
+                var time = parseInt(info[2]);
+                if(currentTime > time + 3000) {
+                    bloodPositions.splice(j, 1);
+                    j--;
+                } else {
+                    drawBlood(x, y);
+                }
+            }
+            for(i = 0; i < shotPositions.length; i++) {
+                var info = getShotInfo(i);
+                var x = parseFloat(info[0]);
+                var y = parseFloat(info[1]);
+                var time = parseInt(info[2]);
+                if(currentTime > time + 3000) {
+                    shotPositions.splice(i, 1);
+                    i--;
+                } else {
+                    drawShot(x, y);
+                }
+            }
+        }
+
+        function updateCadaver(elapsedTime) {
+            for(i = 0; i < cadaverPositions.length; i++) {
+                var info = getCadaverInfo(i);
+                var newX = parseFloat(info[0]);
+                var newY = parseFloat(info[1])+ (200 * elapsedTime);
+                var type = parseInt(info[2]);
+                if(newY >= height) {
+                    cadaverPositions.splice(i, 1);
+                    i--;
+                } else {
+                    var newCadaverInfo = newX + "|" + newY + "|" + type;
+                    cadaverPositions[i] = newCadaverInfo;
+                    drawCadaver(type, newX, newY);
+                }
+            }
+        }
+        
+        function getCadaverType(xShot, yShot) {
+            console.log(xShot)
+            if(xShot < 65) {
+                return 0;
+            } else if(xShot > 100) {
+                return 2;
+            } else {
+                if(yShot > 50) {
+                    return 3;
+                } else {
+                    return 1;
+                }
+            }
+        }
+
+        function initialize() {
+            duckPositions = [];
+            shotPositions = [];
+            bloodPositions = [];
+            cadaverPositions = [];
+            startingDuck = "0|0|135|100";
+            duckPositions.push(startingDuck);
+        }
+
+        function computeCollision() {
+            if(cursorClickPosition.length != 0 ) {
+                var x = cursorClickPosition[0];
+                var y = cursorClickPosition[1];
+                for(i = 0; i < duckPositions.length; i++) {
+                    var info = getDuckInfo(i);
+                    var duckX = parseInt(info[0]);
+                    var duckY = parseInt(info[1]);
+                    var duckXEnd = duckX + 140;
+                    var duckYEnd = duckY + 100;
+                    console.log(duckX, duckY, duckXEnd, duckYEnd, x, y)
+                    if(x >= duckX && x <= duckXEnd && y >= duckY && y <= duckYEnd) {
+                        score++;
+                        scoreBox.innerHTML = score;
+                        if(score == 10 || score == 69 || score == 100) {
+                            screamer();
+                        }
+                        duckPositions.splice(i, 1)
+                        var xShot = duckXEnd - x;
+                        var yShot = duckYEnd - y;
+                        var newCadaver = duckX + "|" + duckY + "|" + getCadaverType(xShot, yShot);
+                        cadaverPositions.push(newCadaver);
+                        var newBlood = (x - 50) + "|" + (y - 50) + "|" + Date.now();
+                        bloodPositions.push(newBlood);
+                        i--;
+                    }
+                }
+                cursorClickPosition = [];
+            }
+        }
+
+        function spawnNew() {
+            var ducksOnScreen = duckPositions.length;
+            if(ducksOnScreen < maxDucksOnScreen) {
+                var corner = randomInt(0, 4);
+                var x;
+                var y;
+                var vector;
+                switch(corner) {
+                    case 0:
+                        x = -100;
+                        y = -100;
+                        vector = randomInt(110, 160);
+                        break;
+                    case 1:
+                        x = width;
+                        y = -100;
+                        vector = randomInt(200, 250);
+                        break;
+                    case 2:
+                        x = width;
+                        y = height;
+                        vector = randomInt(290, 340);
+                        break;
+                    case 3:
+                        x = -100;
+                        y = height;
+                        vector = randomInt(20, 70);
+                        break;
+                    default:
+                        break;
+                }
+                var speed = randomInt(100, 600);
+                var newDuck =  x + "|" + y + "|" + vector + "|" + speed;
+                if(ducksOnScreen == 0) {
+                    duckPositions.push(newDuck);
+                } else {
+                    var chance = randomInt(0, 100);
+                    if(chance == 1) {
+                        duckPositions.push(newDuck);
+                    }
+                }
+            }
+        }
+
+        function screamer() {
+            clearInterval(interval);
+            var quack = new Audio('./assets/quack.mp3');
+            quack.play();
+            context.drawImage(duckScreamer, 0, 0);
+            setTimeout(() => {
+                interval = setInterval(tick, 16);
+            }, 1000)
+        }
+
+        document.getElementById("button").addEventListener("click", function() {
+            switch(buttonAction) {
+                case "resume":
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    interval = setInterval(tick, 16);
+                    break;
+                case "pause":
+                    clearInterval(interval);
+                    buttonAction = "resume";
+                    document.getElementById("button").innerHTML = "Resume";
+                    break;
+                case "start":
+                    document.getElementById("gameOverUi").style.display = 'none';
+                    score = 0;
+                    document.getElementById("score").innerHTML = score;
+                    missedDucks = 0;
+                    document.getElementById("missedDucks").innerHTML = 0;
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    initialize();
+                    interval = setInterval(tick, 16);
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        document.addEventListener("click", function(event) {
+            if(cooldown == 0) {
+                var x = event.clientX;
+                var y = event.clientY - 100;
+                var shotgunFire = new Audio('./assets/shotgun.wav');
+                shotgunFire.play();
+                cooldown = 35;
+                cursorClickPosition.push(x);
+                cursorClickPosition.push(y);
+                var newShot = (x - 50) + "|" + (y - 50) + "|" + Date.now();
+                shotPositions.push(newShot);
+            }
+        })
+
+        function tick() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            computeCollision();
+            updateSprites(elapsedTime);
+            updateCadaver(elapsedTime);
+            spawnNew();
+            updateDucks(elapsedTime);
+            if(cooldown > 0) {
+                cooldown--;
+            }
+            if(missedDucks >= 10) {
+                clearInterval(interval);
+                buttonAction = "start";
+                document.getElementById("button").innerHTML = "Restart";
+                document.getElementById("gameOverUi").style.display = 'block';
+                var bestScore = document.getElementById("bestScore").innerHTML;
+                if(bestScore < score) {
+                    document.getElementById("bestScore").innerHTML = score;
+                }
+            }
+        }
+    </script>
+</html>
