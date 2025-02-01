@@ -3,15 +3,15 @@ var cardNameList = [];
 var cardNameList2 = [];
 var counter = 0;
 
-var choosenCard1 = "";
-var choosenCardName1 = "";
-var choosenCard2 = "";
-var choosenCardName2 = "";
-var choosenCardCounter = 0;
+var chosenCard1 = "";
+var chosenCardName1 = "";
+var chosenCard2 = "";
+var chosenCardName2 = "";
+var chosenCardCounter = 0;
 
-/***Cette fonction est la plus importante. Elle va d'abord appeler "chooseCards" qui va choisir des cartes. Ensuite elle va les mettre en désordre et enfin, elle va créer les éléments html pour afficher les cartes et les mettre dans le body***/
+/***Cette fonction est la plus importante. Elle va d'abord appeler "choseCards" qui va choisir des cartes. Ensuite elle va les mettre en désordre et enfin, elle va créer les éléments html pour afficher les cartes et les mettre dans le body***/
 function loadGame() {
-	chooseCards("numberType");
+	choseCards("numberType");
 	for(var z = 0; z < cardNameList.length; z++) {
 		cardNameList2.push(cardNameList[z]);
 		cardNameList2.push(cardNameList[z]);
@@ -35,10 +35,10 @@ function loadGame() {
 			var backImg = document.createElement('img');
 			backImg.setAttribute("id", "backImg" + k + "" + j);
 			backImg.setAttribute("class", "cardImgBack");
-			backImg.setAttribute("src", "./assets/carte/back.png");
+			backImg.setAttribute("src", "./assets/back.png");
 			
 			var contentImg = document.createElement('img');
-			contentImg.setAttribute("src", "./assets/carte/" + cardNameList2[counter] + ".gif");
+			contentImg.setAttribute("src", "./assets/" + cardNameList2[counter] + ".svg");
 			contentImg.setAttribute("id", k + "" + j);
 			contentImg.setAttribute("data-imgName", cardNameList2[counter]);
 			cardArray.push(k + "" + j);
@@ -52,7 +52,7 @@ function loadGame() {
 	};
 };
 /***Cette fonction choisit des cartes dans la liste des cartes et en choisit 10. Ensuite, elle les double.***/
-function chooseCards(type) {
+function choseCards(type) {
 	for(var i = 0; i < 10; i++) {
 		var cardNumber = Math.floor(Math.random() * 13);
 		var cardType = Math.floor(Math.random() * 4);
@@ -80,19 +80,19 @@ function shuffleArray(array) {
 };
 /***La fonction compare les cartes en stockant leur ID et leur nom. Ensuite on regarde si les IDs sont identiques. Si c'est le cas, alors on les supprime, si ce n'est pas le cas alors on les retourne***/
 function compareCard(cardId, cardName, event) {
-	if(choosenCardCounter == 0) {
-		choosenCard1 = cardId;
-		choosenCardName1 = cardName;
+	if(chosenCardCounter == 0) {
+		chosenCard1 = cardId;
+		chosenCardName1 = cardName;
 		element1 = event.currentTarget;
 		element1.style.transform = "rotateY(180deg)";
-		choosenCardCounter = choosenCardCounter + 1;
-	} else if(choosenCardCounter == 1) {
-		if (choosenCardName1 == cardName) {
+		chosenCardCounter = chosenCardCounter + 1;
+	} else if(chosenCardCounter == 1) {
+		if (chosenCardName1 == cardName) {
 			console.log("ARRÊTE !!!");
 		} else {
-			choosenCardCounter = 0;
-			choosenCard2 = cardId;
-			choosenCardName2 = cardName;
+			chosenCardCounter = 0;
+			chosenCard2 = cardId;
+			chosenCardName2 = cardName;
 			element2 = event.currentTarget;
 			element2.style.transform = "rotateY(180deg)";
 
@@ -101,11 +101,11 @@ function compareCard(cardId, cardName, event) {
 			overlay.setAttribute("id", "overlay");
 			document.getElementById('body').appendChild(overlay);
 
-			if(choosenCard1 == choosenCard2) {
+			if(chosenCard1 == chosenCard2) {
 				setTimeout(function(){
 					console.log("nice");
-					document.getElementById("containerDiv"+('0'+choosenCardName1).slice(-2)).remove();
-					document.getElementById("containerDiv"+('0'+choosenCardName2).slice(-2)).remove();
+					document.getElementById("containerDiv"+('0'+chosenCardName1).slice(-2)).remove();
+					document.getElementById("containerDiv"+('0'+chosenCardName2).slice(-2)).remove();
 					document.getElementById('overlay').remove();
 				}, 1000)
 			} else {
