@@ -20,9 +20,13 @@ html, body {
 	align-items: center;
 	
 }
-.cardImg {
+.cell {
 	height: 90%;
 	width: 15%;
+}
+.cardImg {
+	height: 100%;
+	width: 100%;
 	transition: transform 1s;
 	transform-style: preserve-3d;
 	perspective: 500px;
