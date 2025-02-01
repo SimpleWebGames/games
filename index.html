@@ -1,6 +1,482 @@
-<!doctype html>
-<html lang="fr">
-  <body>
-    <h1>uuuuuhhhhh</h1>
-  </body>
-</html>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Snake</title>
+        <meta charset="utf8"/>
+        <style>
+            html, body {
+                height: auto;
+                width: auto;
+                background-color: black;
+            }
+            p {
+                font-family: monospace;
+                font-size: 24px;
+                color: #148f09;
+            }
+            #canvas {
+                background-color: #148f09;
+            }
+            #container {
+                height: 100%;
+                width: 100%;
+                text-align: center;
+            }
+            #uiContainer {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                height: 80px;
+                justify-content: space-evenly;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            #scoreContainer {
+                display: flex;
+                flex-direction: row;
+                width: 20%;
+                text-align: center;
+                justify-content: center;
+            }
+            #button {
+                width: 20%;
+                height: 60px;
+                background-color: black;
+                border-color: #148f09;
+                border-width: 5px;
+                border-radius: 10px;
+                border-style: solid;
+                font-family: monospace;
+                font-size: 24px;
+                color: #148f09;
+            }
+            #bestScoreContainer {
+                display: flex;
+                flex-direction: row;
+                width: 20%;
+                text-align: center;
+                justify-content: center;
+            }
+            #gameOverUi {
+                position: absolute;
+                top: 50%;
+                left: 0px;
+                right: 0px;
+                display: none;
+                justify-content: center;
+                text-align: center;
+                background-color: black;
+            }
+            #dropdown {
+                position: relative;
+                width: 20%;
+                height: 60px;
+            }
+            #difficultyButton {
+                width: 100%;
+                height: 100%;
+                background-color: black;
+                border-color: #148f09;
+                border-width: 5px;
+                border-radius: 10px;
+                border-style: solid;
+                font-family: monospace;
+                font-size: 24px;
+                color: #148f09;
+            }
+            #dropdown-content {
+                display: none;
+                position: relative;
+                background-color: black;
+                width: 200px;
+                z-index: 1;
+                margin: auto;
+                padding: 10px;
+            }
+            #dropdownContentInner {
+                border-width: 5px;
+                border-style: solid;
+                border-radius: 5px;
+                border-color: #148f09;
+            }
+            #dropdown-content button {
+                background-color: black;
+                font-family: monospace;
+                font-size: 16px;
+                color: #148f09;
+                width: 100%;
+                height: auto;
+                margin-top: 10px;
+                margin-bottom: 10px;
+                display: block;
+                border-style: none;
+            }
+            #dropdown-content button:hover {
+                background-color: #148f09;
+                color: black;
+            }
+            #dropdown:hover #dropdown-content {
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="uiContainer">
+                <button id="button">Play</button>
+                <div id="scoreContainer">
+                    <p>Score:&nbsp;</p>
+                    <p id="score">0</p>
+                </div>
+                <div id="bestScoreContainer">
+                    <p>Best score:&nbsp;</p>
+                    <p id="bestScore">0</p>
+                </div>
+                <div id="dropdown">
+                    <button id="difficultyButton">Difficulty</button>
+                    <div id="dropdown-content">
+                        <div id="dropdownContentInner">
+                            <button id="easyButton">Easy</button>
+                            <button id="mediumButton">Medium</button>
+                            <button id="hardButton">Hard</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="gameOverUi">
+                <p>Game over !</p>
+            </div>
+            <canvas id="canvas"></canvas>
+        </div>
+    </body>
+    <script>
+        var height = screen.height - 200;
+        var canvasHeight = Math.floor(height / 100) * 100;
+        document.getElementById("canvas").height = canvasHeight;
+        document.getElementById("canvas").width = canvasHeight;
+
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext("2d");
+
+        var difficulty = "medium";
+        var rabbitProbability = 30;
+        var buttonAction = "start";
+        var bestScore;
+        var snakeSize;
+        var direction;
+        var xPosition;
+        var yPosition;
+        var snakeOccupiedTiles;
+        var appleOccupiedTile;
+        var rabbitOccupiedTile;
+        var interval;
+        var rabbitTickCounter;
+        var score;
+
+        function tileFromPosition(x, y) {
+            var first = Math.floor(x / 20);
+            var second = Math.floor(y / 20);
+            var tile = first + "|" + second;
+            return tile;
+        }
+
+        function positionFromTile(tile) {
+            var stringArray = tile.split("|");
+            var first = stringArray[0] * 20;
+            var second = stringArray[1] * 20;
+            return [first, second];
+        }
+
+        function drawBody(x, y) {
+            context.beginPath();
+            context.fillStyle = "black";
+            context.fillRect(x, y, 20, 20);
+            context.stroke();
+        }
+
+        function drawHead(x, y) {
+            context.beginPath();
+            context.fillStyle = "black";
+            context.fillRect(x, y, 20, 20);
+            context.stroke();
+            
+            switch(direction) {
+                case "right":
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x + 20, y + 8, 8, 4);
+                    context.stroke();
+
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x + 28, y + 12, 4, 4);
+                    context.stroke();
+
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x + 28, y + 4, 4, 4);
+                    context.stroke();
+                    break;
+                case "bottom":
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x + 8, y - 8, 4, 8);
+                    context.stroke();
+
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x + 12, y - 12, 4, 4);
+                    context.stroke();
+
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x + 4, y - 12, 4, 4);
+                    context.stroke();
+                    break;
+                case "left":
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x, y + 8, -8, 4);
+                    context.stroke();
+
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x - 12, y + 4, 4, 4);
+                    context.stroke();
+
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x - 12, y + 12, 4, 4);
+                    context.stroke();
+                    break;
+                case "top":
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x + 8, y + 20, 4, 8);
+                    context.stroke();
+
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x + 4, y + 28, 4, 4);
+                    context.stroke();
+
+                    context.beginPath();
+                    context.fillStyle = "black";
+                    context.fillRect(x + 12, y + 28, 4, 4);
+                    context.stroke();
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        function drawSnake() {
+            var newSnakeOccupiedTiles = [];
+            for(i = 0; i < snakeSize; i++) {
+                if(i == 0) {
+                    drawHead(xPosition, yPosition);
+                    var headTile = tileFromPosition(xPosition, yPosition);
+                    newSnakeOccupiedTiles.push(headTile);
+                    if(snakeOccupiedTiles.includes(headTile) || xPosition > canvasHeight || xPosition < 0 || yPosition > canvasHeight || yPosition < 0) {
+                        gameOver();
+                    }
+                } else {
+                    var newPosition = snakeOccupiedTiles[i - 1];
+                    var positionForBody = positionFromTile(newPosition);
+                    drawBody(positionForBody[0], positionForBody[1]);
+                    newSnakeOccupiedTiles.push(newPosition);
+                }
+            }
+            snakeOccupiedTiles = newSnakeOccupiedTiles;
+        }
+
+        function drawApple() {
+            var applePosition = positionFromTile(appleOccupiedTile);
+            context.beginPath();
+            context.fillStyle = "black";
+            context.fillRect(applePosition[0] + 3, applePosition[1] + 3, 14, 14);
+            context.stroke();
+        }
+
+        function generateApple() {
+            randomX = Math.floor(Math.random() * canvas.width);
+            randomY = Math.floor(Math.random() * canvas.height);
+            appleOccupiedTile = tileFromPosition(randomX, randomY);
+            drawApple();
+        }
+
+        function drawRabbit() {
+            var rabbitPoistion = positionFromTile(rabbitOccupiedTile);
+            context.beginPath();
+            context.fillStyle = "black";
+            context.fillRect(rabbitPoistion[0] + 3, rabbitPoistion[1] + 3, 14, 14);
+            context.stroke();
+
+            context.beginPath();
+            context.fillStyle = "black";
+            context.fillRect(rabbitPoistion[0] + 5, rabbitPoistion[1] - 4, 3, 6);
+            context.stroke();
+
+            context.beginPath();
+            context.fillStyle = "black";
+            context.fillRect(rabbitPoistion[0] + 12, rabbitPoistion[1] - 4, 3, 6);
+            context.stroke();
+        }
+
+        function generateRabbit() {
+            randomX = Math.floor(Math.random() * canvas.width);
+            randomY = Math.floor(Math.random() * canvas.height);
+            rabbitOccupiedTile = tileFromPosition(randomX, randomY);
+            drawRabbit();
+        }
+
+        function initialize() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            var basicPosition = positionFromTile("3|3");
+            xPosition = basicPosition[0];
+            yPosition = basicPosition[1];
+            snakeSize = 2;
+            direction = "right";
+            snakeOccupiedTiles = [];
+            appleOccupiedTile = "";
+            rabbitOccupiedTile = "";
+            rabbitTickCounter = 0;
+            score = 0;
+            var headPosition = tileFromPosition(xPosition, yPosition);
+            var bodyPosition1 = tileFromPosition(xPosition - 20, yPosition);
+            snakeOccupiedTiles.push(headPosition);
+            snakeOccupiedTiles.push(bodyPosition1);
+            generateApple();
+        }
+
+        function gameOver() {
+            clearInterval(interval);
+            buttonAction = "start";
+            document.getElementById("button").innerHTML = "Restart";
+            document.getElementById("gameOverUi").style.display = 'block';
+            var bestScore = document.getElementById("bestScore").innerHTML;
+            if(bestScore < snakeSize - 2) {
+                document.getElementById("bestScore").innerHTML = score;
+            }
+        }
+
+        document.addEventListener("keydown", event => {
+            switch(event.keyCode) {
+                case 37:
+                    if(direction != "right") {
+                        direction = "left";
+                    }
+                    break;
+                case 38:
+                    if(direction != "top") {
+                        direction = "bottom";
+                    }
+                    break;
+                case 39:
+                    if(direction != "left") {
+                        direction = "right";
+                    }
+                    break;
+                case 40:
+                    if(direction != "bottom") {
+                        direction = "top";
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        document.getElementById("button").addEventListener("click", function() {
+            switch(buttonAction) {
+                case "resume":
+                    interval = setInterval(tick, 250);
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    break;
+                case "pause":
+                    clearInterval(interval);
+                    buttonAction = "resume";
+                    document.getElementById("button").innerHTML = "Resume";
+                    break;
+                case "start":
+                    document.getElementById("gameOverUi").style.display = 'none';
+                    initialize();
+                    document.getElementById("score").innerHTML = score;
+                    interval = setInterval(tick, 250);
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        document.getElementById("easyButton").addEventListener("click", function() {
+            clearInterval(interval);
+            interval = setInterval(tick, 500);
+            difficulty = "easy";
+            rabbitProbability = 15;
+        });
+
+        document.getElementById("mediumButton").addEventListener("click", function() {
+            clearInterval(interval);
+            interval = setInterval(tick, 250);
+            difficulty = "medium";
+            rabbitProbability = 30;
+        });
+
+        document.getElementById("hardButton").addEventListener("click", function() {
+            clearInterval(interval);
+            interval = setInterval(tick, 100);
+            difficulty = "hard";
+            rabbitProbability = 60;
+        });
+
+        function tick() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            switch(direction) {
+                case "right":
+                    xPosition = xPosition + 20;
+                    break;
+                case "bottom":
+                    yPosition = yPosition - 20;
+                    break;
+                case "left":
+                    xPosition = xPosition - 20;
+                    break;
+                case "top":
+                    yPosition = yPosition + 20;
+                    break;
+                default:
+                    break;
+            }
+            drawSnake();
+            if(snakeOccupiedTiles.includes(appleOccupiedTile)) {
+                generateApple();
+                snakeSize++;
+                score++;
+                document.getElementById("score").innerHTML = score;
+            } else {
+                drawApple();
+            }
+            if(snakeOccupiedTiles.includes(rabbitOccupiedTile)) {
+                rabbitOccupiedTile = "";
+                rabbitTickCounter = 0;
+                snakeSize++;
+                score = score + 5;
+                document.getElementById("score").innerHTML = score;
+            } else if(rabbitOccupiedTile != "" && rabbitTickCounter < 30) {
+                drawRabbit();
+                rabbitTickCounter++;
+            } else {
+                rabbitOccupiedTile = "";
+                rabbitTickCounter = 0;
+            }
+            var rabbitChance = Math.round(Math.random() * rabbitProbability);
+            if(rabbitChance == 1 && rabbitOccupiedTile == "") {
+                generateRabbit();
+            }
+        }
+    </script>
+</html> 
