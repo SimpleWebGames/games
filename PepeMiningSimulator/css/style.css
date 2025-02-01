@@ -1,0 +1,386 @@
+/* Fond*/
+
+body {
+  background-color: black;
+  font-family: Impact;
+  color: white;
+  animation: fadeIn ease 2s;
+  user-select: none;
+}
+
+body#PagePerso {
+  background: url(img-css/background.gif);
+  background-size: cover;
+  background-repeat: no-repeat;
+  font-size: 35px;
+}
+
+
+/* Titre*/
+
+.titre {
+  text-align: center;
+}
+
+/* Description de la page menu (index)*/
+#description {
+  font-size: 20px;
+  position: relative;
+  max-width: 700px;
+  margin: auto;
+  line-height: 2em;
+}
+
+/* Personnages*/
+
+#choixperso {
+  font-family: Impact;
+  color: white;
+  text-align: center;
+  font-size: 50px;
+  animation: fadeIn ease 2s;
+}
+
+/* Choix des personnages*/
+
+#peperage {
+  float: left;
+  padding-left: 100px;
+  padding-top: 100px;
+}
+
+.peperage {
+  border-radius: 25px;
+  background: red;
+  width: 250px;
+  height: 250px;
+}
+
+.peperage:hover {
+  animation: shake 0.0001s infinite;
+}
+
+#poggers {
+  float: right;
+  text-align: right;
+  padding-right: 100px;
+  padding-top: 100px;
+}
+
+.poggers {
+  border-radius: 25px;
+  background: blue;
+  width: 250px;
+  height: 250px;
+}
+
+.poggers:hover {
+  animation: pog 1s infinite;
+}
+
+/* Bouton start*/
+
+.start-button {
+  max-width: 50%;
+  max-height: 50%;
+}
+#start-button {
+  margin: auto;
+  text-align: center;
+}
+
+/*Espace de jeu*/
+
+#game-space {
+  margin: auto;
+  position: relative;
+  width: 1200px;
+  height: 800px;
+  border: 3px solid #73ad21;
+  background: linear-gradient(
+      rgba(255, 255, 255, 0.5),
+      rgba(255, 255, 255, 0.5)
+    ),
+    url(../img/kekistan_flag.jpg);
+}
+
+#bar {
+  position: absolute;
+  margin: auto;
+  background-color: #ffff66;
+  top: 0px;
+  left: 0;
+  width: 1200px;
+  height: 50px;
+}
+
+#game-title {
+  font-size: 40px;
+  max-width: 600px;
+  text-transform: uppercase;
+  text-shadow: 2px 2px #000;
+  float: left;
+}
+
+#pepecoin {
+  position: absolute;
+  top: 5px;
+  right: 250px;
+}
+
+#main-button {
+  position: absolute;
+  left: 250px;
+  top: 270px;
+  max-width: 400px;
+  max-height: 500px;
+}
+
+#balance {
+  position: absolute;
+  right: 100px;
+  font-size: 40px;
+  text-shadow: 2px 2px #000;
+}
+
+#button_rage {
+  position: absolute;
+  left: 20px;
+  width: 200px;
+  height: 200px;
+  transform: scaleX(-1);
+}
+
+#button_pog {
+  position: absolute;
+  top: 25px;
+  left: 20px;
+  width: 200px;
+  height: 200px;
+}
+
+#pickaxe {
+  position: absolute;
+  top: 100px;
+  left: -50px;
+  width: 100px;
+  height: 100px;
+}
+
+#rock {
+  position: absolute;
+  top: 100px;
+  left: -200px;
+}
+
+#main-button:active #pickaxe {
+  animation: pick 0.1s;
+}
+
+#main-button:active #rock {
+  animation: bounce 0.1s;
+}
+
+#upgrade1,
+#upgrade2 {
+  position: absolute;
+  max-width: 350px;
+  max-height: 100px;
+}
+
+#upgrade1 {
+  top: 75px;
+  right: 150px;
+  border-radius: 15px;
+  box-shadow: 0 9px #8b8000;
+}
+
+#upgrade2 {
+  top: 175px;
+  right: 150px;
+  border-radius: 15px;
+  box-shadow: 0 9px #8b8000;
+}
+
+#classicalhat,
+#partyhat,
+#santahat,
+#witchhat,
+#glasses {
+  position: absolute;
+  max-width: 100px;
+}
+
+#classicalhat {
+  top: 380px;
+  right: 350px;
+}
+#partyhat {
+  top: 300px;
+  right: 130px;
+}
+
+#santahat {
+  top: 550px;
+  right: 350px;
+}
+
+#witchhat {
+  top: 550px;
+  right: 150px;
+}
+
+#glasses {
+  top: 720px;
+  right: 250px;
+}
+
+#upgrade1:active {
+  box-shadow: 0 5px #8b8000;
+  transform: translateY(4px);
+}
+
+#upgrade2:active {
+  box-shadow: 0 5px #8b8000;
+  transform: translateY(4px);
+}
+
+#price_clicks,
+#price_auto,
+#price_ch,
+#price_ph,
+#price_sh,
+#price_wh,
+#price_g {
+  position: absolute;
+  margin: auto;
+  font-size: 20px;
+  text-transform: uppercase;
+  text-shadow: 2px 2px #000;
+}
+
+#price_clicks {
+  top: 95px;
+  right: 15px;
+}
+
+#price_auto {
+  top: 190px;
+  right: 15px;
+}
+
+#price_ch {
+  top: 460px;
+  right: 360px;
+}
+
+#price_ph {
+  top: 450px;
+  right: 150px;
+}
+
+#price_sh {
+  top: 640px;
+  right: 360px;
+}
+
+#price_wh {
+  top: 640px;
+  right: 150px;
+}
+
+#price_g {
+  top: 750px;
+  right: 250px;
+}
+
+#hat {
+  position: absolute;
+  bottom: 460px;
+  right: 690px;
+}
+
+#hat img {
+  max-width: 250px;
+  max-height: 250px;
+}
+
+#glasses_wear {
+  position: absolute;
+  top: 330px;
+  left: 250px;
+}
+
+#glasses_wear img {
+  max-width: 250px;
+}
+
+/* Animations*/
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0% {
+    transform: translate(1px, 1px) rotate(0deg);
+  }
+  10% {
+    transform: translate(-1px, -2px) rotate(-1deg);
+  }
+  20% {
+    transform: translate(-3px, 0px) rotate(1deg);
+  }
+  30% {
+    transform: translate(3px, 2px) rotate(0deg);
+  }
+  40% {
+    transform: translate(1px, -1px) rotate(1deg);
+  }
+  50% {
+    transform: translate(-1px, 2px) rotate(-1deg);
+  }
+  60% {
+    transform: translate(-3px, 1px) rotate(0deg);
+  }
+  70% {
+    transform: translate(3px, 1px) rotate(-1deg);
+  }
+  80% {
+    transform: translate(-1px, -1px) rotate(1deg);
+  }
+  90% {
+    transform: translate(1px, 2px) rotate(0deg);
+  }
+  100% {
+    transform: translate(1px, -2px) rotate(-1deg);
+  }
+}
+
+@keyframes pog {
+  100% {
+    transform: scaleX(-1);
+  }
+}
+
+@keyframes pick {
+  100% {
+    transform: rotate(-30deg);
+    transform-origin: 100% 100%;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    top: 100px;
+  }
+  50% {
+    top: 120px;
+  }
+}
