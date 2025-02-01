@@ -11,9 +11,6 @@ html, body {
 .cardRow {
 	height: 25%;
 	width: 60%;
-	background-color: lightblue;
-	border-style: solid;
-	border-width: 1px;
 	display: flex;
 	flex-direction: row;
 	justify-content: space-evenly;
@@ -58,6 +55,7 @@ html, body {
 	right: 5%;
 	font-size: 40px;
 	font-family: helvetica;
+	color: white;
 }
 .overlay {
     	background-color: rgba(1, 1, 1, 0);
