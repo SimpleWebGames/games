@@ -26,6 +26,9 @@ function loadGame() {
 	};
 	for(var k = 0; k < 4; k++) {
 		for(var j = 0; j < 5; j++) {
+			var cell = document.createElement('div');
+			cell.setAttribute("class", "cell");
+			cell.setAttribute("id", "cell" + k + "" + j);
 			
 			var containerDiv = document.createElement('div');
 			containerDiv.setAttribute("class", "cardImg");
@@ -44,8 +47,9 @@ function loadGame() {
 			cardArray.push(k + "" + j);
 			contentImg.setAttribute("class", "cardImgFront");
 			counter = counter + 1;
-			
-			document.getElementById("cardRowELement"+k).appendChild(containerDiv);
+
+			document.getElementById("cardRowELement"+k).appendChild(cell);
+			document.getElementById("cell"+k+""+j).appendChild(containerDiv);
 			document.getElementById("containerDiv"+k+""+j).appendChild(backImg);
 			document.getElementById("containerDiv"+k+""+j).appendChild(contentImg);
 		};
