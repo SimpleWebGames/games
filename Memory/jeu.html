@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+	<meta charset="UTF-8">
+	<meta name="Memories" content="Jeu">
+	<title>Jouez !</title>
+	<link rel="stylesheet" href="jeu.css">
+	<script src="jeu.js"></script>
+	<script>
+		var time = 0;
+		var x = setInterval(function() {
+			/***Le timer qui augmente de 1 chaque seconde***/
+			time = time + 1;
+			var minutes = Math.floor((time % 3600) / 60);
+			var seconds = Math.floor(time % 60);
+			document.getElementById("timerText").innerHTML = minutes + ":" + ('0'+seconds).slice(-2);
+			
+			/***On vérifie s'il y a encore des cartes sur la page, si ce n'est pas le cas alors on nettoie la page et on affiche le texte de fin ainsi que le bouton pour relancer***/
+			nbChild1 = document.getElementById('cardRowELement0').childElementCount;
+			nbChild2 = document.getElementById('cardRowELement1').childElementCount;
+			nbChild3 = document.getElementById('cardRowELement2').childElementCount;
+			nbChild4 = document.getElementById('cardRowELement3').childElementCount;
+			if (nbChild1+nbChild2+nbChild3+nbChild4 == 0) {
+				clearInterval(x);
+				
+				document.getElementById('cardRowELement0').remove();
+				document.getElementById('cardRowELement1').remove();
+				document.getElementById('cardRowELement2').remove();
+				document.getElementById('cardRowELement3').remove();
+				document.getElementById("timerText").remove();
+				
+				var text = document.createElement('p');
+				text.setAttribute('id', "endText");
+				document.getElementById('body').appendChild(text);
+				
+				var reload = document.createElement('button');
+				reload.setAttribute('onclick', 'location.reload()');
+				reload.setAttribute('id', 'buttonReload');
+				document.getElementById('body').appendChild(reload);
+				
+				/***Petit message sympathique***/
+				if (time <= 60) {
+					document.getElementById('endText').innerHTML = "Vous êtes sûr que vous n'avez pas triché ?";
+				}
+				else if (time > 60 && time <= 300) {
+					document.getElementById('endText').innerHTML = "Bravo !! Vous avez mis "+minutes + ":" + ('0'+seconds).slice(-2)+ " pour finir le jeu.";
+				}
+				else if (time > 300) {
+					document.getElementById('endText').innerHTML = "Ouah vous êtes nul... Autant de temps ?! M É D I O C R E";
+				}
+				document.getElementById('buttonReload').innerHTML = "Recommencer";
+			}
+		}, 1000)
+	</script>
+</head>
+<body onload="loadGame()" id="body">
+<p class="timer" id="timerText">0:00</p>
+</body>
+</html>
