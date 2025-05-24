@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Cycles</title>
+        <meta charset="utf8"/>
+        <style>
+            html, body {
+                height: auto;
+                width: auto;
+                background-color: black;
+            }
+            p {
+                font-family: monospace;
+                font-size: 24px;
+                color: blue;
+            }
+            #canvas {
+                background-color: navy;
+            }
+            #container {
+                height: 100%;
+                width: 100%;
+                text-align: center;
+            }
+            #uiContainer {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                height: 80px;
+                justify-content: space-evenly;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            #scoreContainer1, #scoreContainer2 {
+                display: flex;
+                flex-direction: row;
+                width: 20%;
+                text-align: center;
+                justify-content: center;
+            }
+            .score1P {
+                color: #007BFF;
+            }
+            .score2P {
+                color: #FFCC00;
+            }
+            #button {
+                width: 20%;
+                height: 60px;
+                background-color: black;
+                border-color: blue;
+                border-width: 5px;
+                border-radius: 10px;
+                border-style: solid;
+                font-family: monospace;
+                font-size: 24px;
+                color: blue;
+            }
+            #gameOverUi {
+                position: absolute;
+                top: 50%;
+                left: 0px;
+                right: 0px;
+                display: none;
+                justify-content: center;
+                text-align: center;
+                background-color: black;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="uiContainer">
+                <button id="button">Play</button>
+                <div id="scoreContainer1">
+                    <p class="score1P">Player 1 score:&nbsp;</p>
+                    <p class="score1P" id="score1">0</p>
+                </div>
+                <div id="scoreContainer2">
+                    <p class="score2P">Player 2 score:&nbsp;</p>
+                    <p class="score2P" id="score2">0</p>
+                </div>
+            </div>
+            <div id="gameOverUi">
+                <p id="gameOverText">Game over !</p>
+            </div>
+            <canvas id="canvas"></canvas>
+        </div>
+    </body>
+    <script>
+        var height = window.innerHeight - 200;
+        var canvasHeight = Math.floor(height / 100) * 100;
+        document.getElementById("canvas").height = canvasHeight;
+        document.getElementById("canvas").width = canvasHeight;
+
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext("2d");
+
+        var buttonAction = "start";
+
+        var colorBlue = "#007BFF";
+        var colorYellow = "#FFCC00";
+        var colorOrange = "#FF9500";
+        var colorRed = "#FF3A30";
+        
+        var score1 = 0;
+        var player1Tiles = [];
+        var player1Dir = [];
+        var d1 = "bottom";
+        var x1 = 0;
+        var y1 = 0;
+
+        var score2 = 0;
+        var player2Tiles = [];
+        var player2Dir = [];
+        var d2 = "bottom";
+        var x2 = 0;
+        var y2 = 0;
+
+        var interval;
+
+        function tileFromPosition(x, y) {
+            var first = Math.floor(x / 20);
+            var second = Math.floor(y / 20);
+            var tile = first + "|" + second;
+            return tile;
+        }
+
+        function positionFromTile(tile) {
+            var stringArray = tile.split("|");
+            var first = stringArray[0] * 20;
+            var second = stringArray[1] * 20;
+            return [first, second];
+        }
+
+        function getDirection(array, index) {
+            if(index == array.length - 1) {
+                return -1;
+            } else {
+                var oldD = array[index];
+                var newD = array[index + 1];
+                if(oldD == newD && (oldD == "top" || oldD == "bottom")) {
+                    return 0;
+                } else if(oldD == newD && (oldD == "left" || oldD == "right")) {
+                    return 1;
+                } else if((oldD == "left" && newD == "bottom") || (oldD == "top" && newD == "right")) {
+                    return 2;
+                } else if((oldD == "right" && newD == "bottom") || (oldD == "top" && newD == "left")) {
+                    return 3;
+                } else if((oldD == "bottom" && newD == "left") || (oldD == "right" && newD == "top")) {
+                    return 4;
+                } else if((oldD == "bottom" && newD == "right") || (oldD == "left" && newD == "top")) {
+                    return 5;
+                }
+            }
+        }
+
+        function drawTrail(x, y, type, color) {
+            context.beginPath();
+            context.fillStyle = color;
+            switch(type) {
+                default:
+                case 0: //top down
+                    context.fillRect(x + 8, y, 4, 20);
+                    break;
+                case 1: //left right
+                    context.fillRect(x, y + 8, 20, 4);
+                    break;
+                case 2: //top right
+                    context.fillRect(x + 8, y, 4, 12);
+                    context.fillRect(x + 8, y + 8, 12, 4);
+                    break;
+                case 3: //top left
+                    context.fillRect(x + 8, y, 4, 12);
+                    context.fillRect(x, y + 8, 12, 4);
+                    break;
+                case 4: //left down
+                    context.fillRect(x, y + 8, 12, 4);
+                    context.fillRect(x + 8, y + 10, 4, 12);
+                    break;
+                case 5: //right down
+                    context.fillRect(x + 8, y + 8, 12, 4);
+                    context.fillRect(x + 8, y + 10, 4, 12);
+                    break;
+            }
+            context.stroke();
+        }
+
+        function drawBike(x, y, d, color) {
+            context.beginPath();
+            context.fillStyle = color;
+            switch(d) {
+                case "left":
+                case "right":
+                    context.fillRect(x, y + 3, 5, 14);
+                    context.fillRect(x, y + 5, 20, 10);
+                    context.fillRect(x + 15, y + 3, 5, 14);
+                    break;
+                case "top":
+                case "bottom":
+                    context.fillRect(x + 3, y, 14, 5);
+                    context.fillRect(x + 5, y, 10, 20);
+                    context.fillRect(x + 3, y + 15, 14, 5);
+                    break;
+                default:
+                    break;
+            }
+            context.stroke();
+        }
+
+        function drawBikes() {
+            var newTile1 = tileFromPosition(x1, y1);
+            player1Tiles.push(newTile1);
+            player1Dir.push(d1);
+
+            var newTile2 = tileFromPosition(x2, y2);
+            player2Tiles.push(newTile2);
+            player2Dir.push(d2);
+
+            for(var i = 0; i < player1Tiles.length; i++) {
+                var tile1 = positionFromTile(player1Tiles[i]);
+                var tile2 = positionFromTile(player2Tiles[i]);
+                if(i == player1Tiles.length - 1) {
+                    drawBike(tile1[0], tile1[1], d1, colorBlue);
+                    drawBike(tile2[0], tile2[1], d2, colorYellow);
+                } else {
+                    drawTrail(tile1[0], tile1[1], getDirection(player1Dir, i), colorBlue);
+                    drawTrail(tile2[0], tile2[1], getDirection(player2Dir, i), colorYellow);
+                }
+            }
+        }
+
+        function playExplosion(x, y) {
+            var explosion = new Audio('./assets/explosion.mp3');
+            explosion.play();
+
+            context.clearRect(x, y, 20, 20);
+
+            context.beginPath();
+            context.fillStyle = colorYellow;
+            context.fillRect(x + 7, y + 7, 6, 6);
+            context.stroke();
+
+            context.beginPath();
+            context.fillStyle = colorRed;
+            context.fillRect(x, y + 5, 7, 10);
+            context.fillRect(x + 13, y + 5, 7, 10);
+            context.fillRect(x + 5, y, 10, 7);
+            context.fillRect(x + 5, y + 13, 10, 7);
+            context.stroke();
+
+            context.beginPath();
+            context.fillStyle = colorOrange;
+            context.fillRect(x + 3, y + 8, 4, 4);
+            context.fillRect(x + 8, y + 3, 4, 4);
+            context.fillRect(x + 13, y + 8, 4, 4);
+            context.fillRect(x + 8, y + 13, 4, 4);
+            context.stroke();
+        }
+
+        function checkCollision() {
+            var tiles1Size = player1Tiles.length - 1;
+            var bike1Tile = player1Tiles[tiles1Size];
+            var player1Over = false;
+            if(player2Tiles.includes(bike1Tile) || player1Tiles.indexOf(bike1Tile) != tiles1Size) {
+                player1Over = true;
+                var bike1 = positionFromTile(bike1Tile);
+                playExplosion(bike1[0], bike1[1]);
+            }
+            if(x1 > canvasHeight || x1 < 0 || y1 > canvasHeight || y1 < 0) {
+                player1Over = true;
+            }
+
+            var tiles2Size = player2Tiles.length - 1;
+            var bike2Tile = player2Tiles[tiles2Size];
+            var player2Over = false;
+            if(player1Tiles.includes(bike2Tile) || player2Tiles.indexOf(bike2Tile) != tiles2Size) {
+                player2Over = true;
+                var bike2 = positionFromTile(bike2Tile);
+                playExplosion(bike2[0], bike2[1]);
+            }
+            if(x2 > canvasHeight || x2 < 0 || y2 > canvasHeight || y2 < 0) {
+                player2Over = true;
+            }
+
+            if(player1Over && player2Over) {
+                gameOver("Draw !", "blue");
+            } else if(player1Over) {
+                score2++;
+                gameOver("Player 2 wins !", colorYellow);
+            } else if(player2Over) {
+                score1++;
+                gameOver("Player 1 wins !", colorBlue);
+            }
+        }
+
+        function initialize() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+
+            var player1Tile = tileFromPosition(canvasHeight / 2, 0);
+            var player1Position = positionFromTile(player1Tile);
+            player1Tiles = [];
+            player1Tiles.push(player1Tile);
+            d1 = "top";
+            player1Dir = [];
+            player1Dir.push(d1);
+            x1 = player1Position[0];
+            y1 = player1Position[1];
+
+            var player2Tile = tileFromPosition(canvasHeight / 2, canvasHeight);
+            var player2Position = positionFromTile(player2Tile);
+            player2Tiles = [];
+            player2Tiles.push(player2Tile);
+            d2 = "bottom";
+            player2Dir = [];
+            player2Dir.push(d2);
+            x2 = player2Position[0];
+            y2 = player2Position[1];
+        }
+
+        function gameOver(text, color) {
+            clearInterval(interval);
+            buttonAction = "start";
+            var gameOverText = document.getElementById("gameOverText");
+            gameOverText.innerHTML = text;
+            gameOverText.style.color = color;
+            document.getElementById("button").innerHTML = "Restart";
+            document.getElementById("gameOverUi").style.display = 'block';
+            document.getElementById("score1").innerHTML = score1;
+            document.getElementById("score2").innerHTML = score2;
+        }
+
+        document.addEventListener("keydown", event => {
+            switch(event.keyCode) {
+                case 37:
+                    if(d1 != "right") {
+                        d1 = "left";
+                    }
+                    break;
+                case 38:
+                    if(d1 != "top") {
+                        d1 = "bottom";
+                    }
+                    break;
+                case 39:
+                    if(d1 != "left") {
+                        d1 = "right";
+                    }
+                    break;
+                case 40:
+                    if(d1 != "bottom") {
+                        d1 = "top";
+                    }
+                    break;
+                case 65:
+                    if(d2 != "right") {
+                        d2 = "left";
+                    }
+                    break;
+                case 68:
+                    if(d2 != "left") {
+                        d2 = "right";
+                    }
+                    break;
+                case 83:
+                    if(d2 != "bottom") {
+                        d2 = "top";
+                    }
+                    break;
+                case 87:
+                    if(d2 != "top") {
+                        d2 = "bottom";
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        document.getElementById("button").addEventListener("click", function() {
+            switch(buttonAction) {
+                case "resume":
+                    interval = setInterval(tick, 150);
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    break;
+                case "pause":
+                    clearInterval(interval);
+                    buttonAction = "resume";
+                    document.getElementById("button").innerHTML = "Resume";
+                    break;
+                case "start":
+                    document.getElementById("gameOverUi").style.display = 'none';
+                    initialize();
+                    interval = setInterval(tick, 150);
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        function tick() {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            switch(d1) {
+                case "right":
+                    x1 = x1 + 20;
+                    break;
+                case "bottom":
+                    y1 = y1 - 20;
+                    break;
+                case "left":
+                    x1 = x1 - 20;
+                    break;
+                case "top":
+                    y1 = y1 + 20;
+                    break;
+                default:
+                    break;
+            }
+            switch(d2) {
+                case "right":
+                    x2 = x2 + 20;
+                    break;
+                case "bottom":
+                    y2 = y2 - 20;
+                    break;
+                case "left":
+                    x2 = x2 - 20;
+                    break;
+                case "top":
+                    y2 = y2 + 20;
+                    break;
+                default:
+                    break;
+            }
+            drawBikes();
+            checkCollision();
+        }
+    </script>
+</html> 
