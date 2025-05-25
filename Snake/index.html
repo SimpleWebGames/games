@@ -150,6 +150,10 @@
         </div>
     </body>
     <script>
+        var FRAME_INTERVAL_MS = 250;
+        var previousTimeMs = 0;
+        var running = false;
+
         var height = window.innerHeight - 200;
         var canvasHeight = Math.floor(height / 100) * 100;
         document.getElementById("canvas").height = canvasHeight;
@@ -169,7 +173,6 @@
         var snakeOccupiedTiles;
         var appleOccupiedTile;
         var rabbitOccupiedTile;
-        var interval;
         var rabbitTickCounter;
         var score;
 
@@ -198,7 +201,6 @@
             context.beginPath();
             context.fillStyle = "black";
             context.fillRect(x, y, 20, 20);
-            
             switch(direction) {
                 case "right":
                     context.fillRect(x + 20, y + 8, 8, 4);
@@ -298,7 +300,7 @@
         }
 
         function gameOver() {
-            clearInterval(interval);
+            running = false;
             buttonAction = "start";
             document.getElementById("button").innerHTML = "Restart";
             document.getElementById("gameOverUi").style.display = 'block';
@@ -338,12 +340,12 @@
         document.getElementById("button").addEventListener("click", function() {
             switch(buttonAction) {
                 case "resume":
-                    interval = setInterval(tick, 250);
+                    running = true;
                     buttonAction = "pause";
                     document.getElementById("button").innerHTML = "Pause";
                     break;
                 case "pause":
-                    clearInterval(interval);
+                    running = false;
                     buttonAction = "resume";
                     document.getElementById("button").innerHTML = "Resume";
                     break;
@@ -351,7 +353,7 @@
                     document.getElementById("gameOverUi").style.display = 'none';
                     initialize();
                     document.getElementById("score").innerHTML = score;
-                    interval = setInterval(tick, 250);
+                    running = true;
                     buttonAction = "pause";
                     document.getElementById("button").innerHTML = "Pause";
                     break;
@@ -361,70 +363,76 @@
         });
 
         document.getElementById("easyButton").addEventListener("click", function() {
-            clearInterval(interval);
-            interval = setInterval(tick, 500);
+            FRAME_INTERVAL_MS = 500;
             difficulty = "easy";
             rabbitProbability = 15;
         });
 
         document.getElementById("mediumButton").addEventListener("click", function() {
-            clearInterval(interval);
-            interval = setInterval(tick, 250);
+            FRAME_INTERVAL_MS = 250;
             difficulty = "medium";
             rabbitProbability = 30;
         });
 
         document.getElementById("hardButton").addEventListener("click", function() {
-            clearInterval(interval);
-            interval = setInterval(tick, 100);
+            FRAME_INTERVAL_MS = 100;
             difficulty = "hard";
             rabbitProbability = 60;
         });
 
         function tick() {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            switch(direction) {
-                case "right":
-                    xPosition = xPosition + 20;
-                    break;
-                case "bottom":
-                    yPosition = yPosition - 20;
-                    break;
-                case "left":
-                    xPosition = xPosition - 20;
-                    break;
-                case "top":
-                    yPosition = yPosition + 20;
-                    break;
-                default:
-                    break;
-            }
-            drawSnake();
-            if(snakeOccupiedTiles.includes(appleOccupiedTile)) {
-                generateApple();
-                snakeSize++;
-                score++;
-                document.getElementById("score").innerHTML = score;
-            } else {
-                drawApple();
-            }
-            if(snakeOccupiedTiles.includes(rabbitOccupiedTile)) {
-                rabbitOccupiedTile = "";
-                rabbitTickCounter = 0;
-                snakeSize++;
-                score = score + 5;
-                document.getElementById("score").innerHTML = score;
-            } else if(rabbitOccupiedTile != "" && rabbitTickCounter < 30) {
-                drawRabbit();
-                rabbitTickCounter++;
-            } else {
-                rabbitOccupiedTile = "";
-                rabbitTickCounter = 0;
-            }
-            var rabbitChance = Math.round(Math.random() * rabbitProbability);
-            if(rabbitChance == 1 && rabbitOccupiedTile == "") {
-                generateRabbit();
-            }
+            requestAnimationFrame((currentTimeMs) => {
+                var deltaTimeMs = currentTimeMs - previousTimeMs;
+                if(deltaTimeMs >= FRAME_INTERVAL_MS && running) {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    switch(direction) {
+                        case "right":
+                            xPosition = xPosition + 20;
+                            break;
+                        case "bottom":
+                            yPosition = yPosition - 20;
+                            break;
+                        case "left":
+                            xPosition = xPosition - 20;
+                            break;
+                        case "top":
+                            yPosition = yPosition + 20;
+                            break;
+                        default:
+                            break;
+                    }
+                    drawSnake();
+                    if(snakeOccupiedTiles.includes(appleOccupiedTile)) {
+                        generateApple();
+                        snakeSize++;
+                        score++;
+                        document.getElementById("score").innerHTML = score;
+                    } else {
+                        drawApple();
+                    }
+                    if(snakeOccupiedTiles.includes(rabbitOccupiedTile)) {
+                        rabbitOccupiedTile = "";
+                        rabbitTickCounter = 0;
+                        snakeSize++;
+                        score = score + 5;
+                        document.getElementById("score").innerHTML = score;
+                    } else if(rabbitOccupiedTile != "" && rabbitTickCounter < 30) {
+                        drawRabbit();
+                        rabbitTickCounter++;
+                    } else {
+                        rabbitOccupiedTile = "";
+                        rabbitTickCounter = 0;
+                    }
+                    var rabbitChance = Math.round(Math.random() * rabbitProbability);
+                    if(rabbitChance == 1 && rabbitOccupiedTile == "") {
+                        generateRabbit();
+                    }
+
+                    previousTimeMs = currentTimeMs;
+                }
+                tick();
+            });
         }
+        tick();
     </script>
 </html> 
