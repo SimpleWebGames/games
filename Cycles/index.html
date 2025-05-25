@@ -121,6 +121,8 @@
         var x2 = 0;
         var y2 = 0;
 
+        var explosion = new Audio('./assets/explosion.mp3');
+
         function tileFromPosition(x, y) {
             var first = Math.floor(x / 20);
             var second = Math.floor(y / 20);
@@ -233,7 +235,6 @@
         }
 
         function playExplosion(x, y) {
-            var explosion = new Audio('./assets/explosion.mp3');
             explosion.play();
 
             context.clearRect(x, y, 20, 20);
