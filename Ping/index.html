@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Ping</title>
+        <meta charset="utf8"/>
+        <style>
+            html, body {
+                height: auto;
+                width: auto;
+                background-color: black;
+            }
+            p {
+                font-family: monospace;
+                font-size: 24px;
+                color: white;
+            }
+            #canvas {
+                background-color: #1C1C1E;
+            }
+            #container {
+                height: 100%;
+                width: 100%;
+                text-align: center;
+            }
+            #uiContainer {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                height: 80px;
+                justify-content: space-evenly;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            #scoreContainer1, #scoreContainer2 {
+                display: flex;
+                flex-direction: row;
+                width: 20%;
+                text-align: center;
+                justify-content: center;
+            }
+            .score1P {
+                color: #007BFF;
+            }
+            .score2P {
+                color: #FF3A30;
+            }
+            #button {
+                width: 20%;
+                height: 60px;
+                background-color: black;
+                border-color: white;
+                border-width: 5px;
+                border-radius: 10px;
+                border-style: solid;
+                font-family: monospace;
+                font-size: 24px;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="uiContainer">
+                <button id="button">Play</button>
+                <div id="scoreContainer1">
+                    <p class="score1P">Player 1 score:&nbsp;</p>
+                    <p class="score1P" id="score1">0</p>
+                </div>
+                <div id="scoreContainer2">
+                    <p class="score2P">Player 2 score:&nbsp;</p>
+                    <p class="score2P" id="score2">0</p>
+                </div>
+            </div>
+            <canvas id="canvas"></canvas>
+        </div>
+    </body>
+    <script>
+        var FRAME_INTERVAL_MS = 16;
+        var previousTimeMs = 0;
+        var running = false;
+
+        var height = window.innerHeight - 200;
+        var canvasHeight = Math.floor(height / 100) * 100;
+        var halfCanvasHeight = canvasHeight / 2;
+        var canvasWidth = canvasHeight * 1.5;
+        var canvasMargin = canvasWidth * 0.1;
+        var barHeight = canvasHeight * 0.15;
+        var halfBarHeight = barHeight / 2;
+
+        document.getElementById("canvas").height = canvasHeight;
+        document.getElementById("canvas").width = canvasWidth;
+
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext("2d");
+
+        var buttonAction = "start";
+        
+        var keyMap = {};
+        const degrees = Math.PI / 180;
+
+        var colorBlue = "#007BFF";
+        var colorRed = "#FF3A30";
+        
+        var score1 = 0;
+        var bar1X = canvasMargin;
+        var bar1Y = 0;
+
+        var score2 = 0;
+        var bar2X = canvasWidth - (canvasMargin + 10);
+        var bar2Y = 0;
+
+        var ballX = 0;
+        var ballY = 0;
+        var ballD = 0;
+
+        var hit = new Audio('./assets/hit.mp3');
+            
+        function drawBall(x, y) {
+            context.beginPath();
+            context.fillStyle = "white";
+            context.fillRect(x + 5, y, 10, 20);
+            context.fillRect(x, y + 5, 20, 10);
+            context.fillRect(x + 2, y + 2, 16, 16);
+            context.fillRect(x + 2, y + 2, 16, 16);
+            context.stroke();
+        }
+
+        function drawBar(x, y, color) {
+            context.beginPath();
+            context.fillStyle = color;
+            context.fillRect(x, y, 10, barHeight);
+            context.stroke();
+        }
+
+        function drawBars() {
+            drawBar(bar1X, bar1Y, colorBlue);
+            drawBar(bar2X, bar2Y, colorRed);
+        }
+
+        function checkCollision() {
+            if(ballY <= 0 || ballY + 20 >= canvasHeight) {
+                //hit top or bottom wall
+                var angle = 90 - ballD;
+                ballD = ballD + (2 * angle);
+                hit.play();
+            }
+
+            if((bar1X <= ballX + 20 && ballX <= bar1X + 10) && (bar1Y <= ballY + 20 && ballY <= bar1Y + barHeight)) {
+                //hit bar1
+                var angleCoef = ((bar1Y + halfBarHeight) - (ballY + 10)) / halfBarHeight;
+                ballD = 90 - (angleCoef * 60);
+                hit.play();
+            } else if((bar2X <= ballX + 20 && ballX <= bar2X + 10) && (bar2Y <= ballY + 20 && ballY <= bar2Y + barHeight)) {
+                //hit bar2
+                var angleCoef = ((bar2Y + halfBarHeight) - (ballY + 10)) / halfBarHeight;
+                ballD = 270 + (angleCoef * 60);
+                hit.play();
+            }
+
+            if(ballY + 20 < 0 || ballY > canvasHeight) {
+                //out of bounds somehow
+                initialize();
+            }
+
+            if(ballX + 20 > canvasWidth) {
+                //player 1 scores
+                score1++;
+                document.getElementById("score1").innerHTML = score1;
+                initialize();
+            } else if(ballX < 0) {
+                //player 2 scores
+                score2++;
+                document.getElementById("score2").innerHTML = score2;
+                initialize();
+            }
+        }
+
+        function initialize() {
+            bar1Y = bar2Y = halfCanvasHeight - halfBarHeight;
+            ballX = (canvasWidth / 2) - 10;
+            ballY = (canvasHeight / 2) - 10;
+            ballD = Math.floor(Math.random() * 2) == 0 ? 90 : 270;
+        }
+
+        onkeydown = onkeyup = function(event){
+            keyMap[event.keyCode] = event.type == 'keydown';
+        }
+
+        document.getElementById("button").addEventListener("click", function() {
+            switch(buttonAction) {
+                case "resume":
+                    running = true;
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    break;
+                case "pause":
+                    running = false;
+                    buttonAction = "resume";
+                    document.getElementById("button").innerHTML = "Resume";
+                    break;
+                case "start":
+                    initialize();
+                    running = true;
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        function tick() {
+            requestAnimationFrame((currentTimeMs) => {
+                var deltaTimeMs = currentTimeMs - previousTimeMs;
+                if(deltaTimeMs >= FRAME_INTERVAL_MS && running) {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    if(keyMap[83] && keyMap[87]) {
+                        bar1Y = bar1Y;
+                    } else if(keyMap[83]) {
+                        if(bar1Y + barHeight <= canvasHeight) {
+                            bar1Y = bar1Y + 12;
+                        }
+                    } else if(keyMap[87]) {
+                        if(bar1Y >= 0) {
+                            bar1Y = bar1Y - 12;
+                        }
+                    }
+                    if(keyMap[38] && keyMap[40]) {
+                        bar2Y = bar2Y;
+                    } else if(keyMap[38]) {
+                        if(bar2Y >= 0) {
+                            bar2Y = bar2Y - 12;
+                        }
+                    } else if(keyMap[40]) {
+                        if(bar2Y + barHeight <= canvasHeight) {
+                            bar2Y = bar2Y + 12;
+                        }
+                    }
+                    var angle = ballD * degrees;
+                    ballX = ballX + (12 * Math.sin(angle));
+                    ballY = ballY - (12 * Math.cos(angle));
+                    drawBall(ballX, ballY);
+                    drawBars();
+                    checkCollision();
+
+                    previousTimeMs = currentTimeMs;
+                }
+                tick();
+            });
+        }
+        tick();
+    </script>
+</html> 
