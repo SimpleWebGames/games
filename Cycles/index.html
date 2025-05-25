@@ -88,6 +88,11 @@
         </div>
     </body>
     <script>
+        var MAX_FPS = 6;
+        var FRAME_INTERVAL_MS = 1000 / MAX_FPS;
+        var previousTimeMs = 0;
+        var running = false;
+
         var height = window.innerHeight - 200;
         var canvasHeight = Math.floor(height / 100) * 100;
         document.getElementById("canvas").height = canvasHeight;
@@ -116,8 +121,6 @@
         var d2 = "";
         var x2 = 0;
         var y2 = 0;
-
-        var interval;
 
         function tileFromPosition(x, y) {
             var first = Math.floor(x / 20);
@@ -319,7 +322,7 @@
         }
 
         function gameOver(text, color) {
-            clearInterval(interval);
+            running = false;
             buttonAction = "start";
             var gameOverText = document.getElementById("gameOverText");
             gameOverText.innerHTML = text;
@@ -382,19 +385,19 @@
         document.getElementById("button").addEventListener("click", function() {
             switch(buttonAction) {
                 case "resume":
-                    interval = setInterval(tick, 150);
+                    running = true;
                     buttonAction = "pause";
                     document.getElementById("button").innerHTML = "Pause";
                     break;
                 case "pause":
-                    clearInterval(interval);
+                    running = false;
                     buttonAction = "resume";
                     document.getElementById("button").innerHTML = "Resume";
                     break;
                 case "start":
                     document.getElementById("gameOverUi").style.display = 'none';
                     initialize();
-                    interval = setInterval(tick, 150);
+                    running = true;
                     buttonAction = "pause";
                     document.getElementById("button").innerHTML = "Pause";
                     break;
@@ -404,41 +407,50 @@
         });
 
         function tick() {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            switch(d1) {
-                case "right":
-                    x1 = x1 + 20;
-                    break;
-                case "bottom":
-                    y1 = y1 - 20;
-                    break;
-                case "left":
-                    x1 = x1 - 20;
-                    break;
-                case "top":
-                    y1 = y1 + 20;
-                    break;
-                default:
-                    break;
-            }
-            switch(d2) {
-                case "right":
-                    x2 = x2 + 20;
-                    break;
-                case "bottom":
-                    y2 = y2 - 20;
-                    break;
-                case "left":
-                    x2 = x2 - 20;
-                    break;
-                case "top":
-                    y2 = y2 + 20;
-                    break;
-                default:
-                    break;
-            }
-            drawBikes();
-            checkCollision();
+            requestAnimationFrame((currentTimeMs) => {
+                var deltaTimeMs = currentTimeMs - previousTimeMs;
+                if(deltaTimeMs >= FRAME_INTERVAL_MS && running) {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    switch(d1) {
+                        case "right":
+                            x1 = x1 + 20;
+                            break;
+                        case "bottom":
+                            y1 = y1 - 20;
+                            break;
+                        case "left":
+                            x1 = x1 - 20;
+                            break;
+                        case "top":
+                            y1 = y1 + 20;
+                            break;
+                        default:
+                            break;
+                    }
+                    switch(d2) {
+                        case "right":
+                            x2 = x2 + 20;
+                            break;
+                        case "bottom":
+                            y2 = y2 - 20;
+                            break;
+                        case "left":
+                            x2 = x2 - 20;
+                            break;
+                        case "top":
+                            y2 = y2 + 20;
+                            break;
+                        default:
+                            break;
+                    }
+                    drawBikes();
+                    checkCollision();
+
+                    previousTimeMs = currentTimeMs;
+                }
+                tick();
+            });
         }
+        tick();
     </script>
 </html> 
