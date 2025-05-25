@@ -331,44 +331,46 @@
         }
 
         document.addEventListener("keydown", event => {
+            var lastD1 = player1Dir[player1Dir.length - 1];
+            var lastD2 = player2Dir[player2Dir.length - 1];
             switch(event.keyCode) {
                 case 37:
-                    if(d1 != "right") {
+                    if(lastD1 != "right") {
                         d1 = "left";
                     }
                     break;
                 case 38:
-                    if(d1 != "top") {
+                    if(lastD1 != "top") {
                         d1 = "bottom";
                     }
                     break;
                 case 39:
-                    if(d1 != "left") {
+                    if(lastD1 != "left") {
                         d1 = "right";
                     }
                     break;
                 case 40:
-                    if(d1 != "bottom") {
+                    if(lastD1 != "bottom") {
                         d1 = "top";
                     }
                     break;
                 case 65:
-                    if(d2 != "right") {
+                    if(lastD2 != "right") {
                         d2 = "left";
                     }
                     break;
                 case 68:
-                    if(d2 != "left") {
+                    if(lastD2 != "left") {
                         d2 = "right";
                     }
                     break;
                 case 83:
-                    if(d2 != "bottom") {
+                    if(lastD2 != "bottom") {
                         d2 = "top";
                     }
                     break;
                 case 87:
-                    if(d2 != "top") {
+                    if(lastD2 != "top") {
                         d2 = "bottom";
                     }
                     break;
