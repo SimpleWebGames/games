@@ -14,9 +14,7 @@
                 height: auto;
                 width: auto;
                 margin: 0px;
-                background: #004666;
-                background: linear-gradient(0deg,rgba(0, 70, 102, 1) 0%, rgba(104, 0, 161, 1) 100%);
-                background-attachment: fixed;
+                background-color: black;
             }
             p, a {
                 font-family: 'Inter';
@@ -24,6 +22,25 @@
                 color: white;
                 padding: 0px;
                 margin: 0px;
+            }
+            #slideShow {
+                position: fixed;
+                top: 0px;
+                left: 0px;
+                bottom: 0px;
+                right: 0px;
+            }
+            .slideImage {
+                border: none; 
+                opacity: 0; 
+                position: absolute;
+                width: 100%; 
+                height: 100%;
+                object-fit: cover;
+                transition: opacity 2s linear;
+            }
+            .show {
+                opacity: 1;
             }
             #header {
                 display: flex;
@@ -33,9 +50,9 @@
                 width: 100%;
                 height: 80px;
                 align-items: center;
-                backdrop-filter: blur(15px);
-                background-color: rgba(255, 255, 255, 0.3);
-                z-index: 1;
+                backdrop-filter: blur(20px);
+                background-color: rgba(58, 58, 60, 0.55);
+                z-index: 2;
             }
             #title {
                 font-size: 28px;
@@ -48,10 +65,13 @@
                 height: auto;
                 align-items: center;
                 margin-top: 20px;
+                z-index: 1;
             }
             .sectionTitle {
-                font-size: 21px;
-                margin-bottom: 20px;
+                font-size: 28px;
+                text-shadow: 1px 1px black;
+                margin-top: 10px;
+                margin-bottom: 30px;
             }
             .game {
                 display: flex;
@@ -65,12 +85,24 @@
                 padding-right: 10px;
                 margin-bottom: 20px;
                 border-radius: 25px;
-                backdrop-filter: blur(15px);
-                background-color: rgba(255, 255, 255, 0.3);
+                backdrop-filter: blur(20px);
+                background-color: rgba(58, 58, 60, 0.55);
+            }
+            .gameText {
+                width: 100%;
+                height: 100%;
+                text-shadow: 1px 1px black;
+                overflow: hidden;
+            }
+            .gameTitle {
+                font-size: 21px;
+                margin-top: 20px;
+                margin-bottom: 10px;
             }
             .playLink {
                 height: fit-content;
                 padding: 15px;
+                margin-left: 10px;
                 border-radius: 10px;
                 background-color: #007BFF;
                 text-decoration: none;
@@ -78,36 +110,75 @@
         </style>
     </head>
     <body>
+        <div id="slideShow">
+            <img id="slideImage0" class="slideImage show" src="./assets/images/cycles.png"/>
+            <img id="slideImage1" class="slideImage" src="./assets/images/ping.png"/>
+            <img id="slideImage2" class="slideImage" src="./assets/images/snake.png"/>
+            <img id="slideImage3" class="slideImage" src="./assets/images/memory.png"/>
+        </div>
         <div id="header">
             <p id="title">Simple Web Games</p>
         </div>
         <div id="container">
             <p class="sectionTitle">Single player games</p>
             <div class="game">
-                <p>Duck</p>
+                <div class="gameText">
+                    <p class="gameTitle">Duck</p>
+                    <p>Shoot the ducks by clicking on them. If you miss 10 ducks, you lose.</p>
+                </div>
                 <a href="./Duck Shooter/index.html" class="playLink">Play</a>
             </div>
             <div class="game">
-                <p>Memory</p>
+                <div class="gameText">
+                    <p class="gameTitle">Memory</p>
+                    <p>Click on two identical cards to make them disappear.</p>
+                </div>
                 <a href="./Memory/jeu.html" class="playLink">Play</a>
             </div>
             <div class="game">
-                <p>Pepe Mining Simulator</p>
+                <div class="gameText">
+                    <p class="gameTitle">Pepe Mining Simulator</p>
+                    <p>Mine pepe coins to buy items.</p>
+                </div>
                 <a href="./PepeMiningSimulator/index.html" class="playLink">Play</a>
             </div>
             <div class="game">
-                <p>Snake</p>
+                <div class="gameText">
+                    <p class="gameTitle">Snake</p>
+                    <p>Become as big as possible by eating apples. If you eat yourself or hit the wall, you lose. Use the arrow keys to change direction.</p>
+                </div>
                 <a href="./Snake/index.html" class="playLink">Play</a>
             </div>
             <p class="sectionTitle">Two players games</p>
             <div class="game">
-                <p>Cycles</p>
+                <div class="gameText">
+                    <p class="gameTitle">Cycles</p>
+                    <p>Tow players battle each other. If you hit your trail, the trail of the other player or the wall, you lose. Player 1 uses the arrow keys to change direction and Player 2 the W, A, S and D keys.</p>
+                </div>
                 <a href="./Cycles/index.html" class="playLink">Play</a>
             </div>
             <div class="game">
-                <p>Ping</p>
+                <div class="gameText">
+                    <p class="gameTitle">Ping</p>
+                    <p>Score points by sending the ball past your opponent's paddle. Player 1 uses the W and S keys to move the paddle up dans down and Player 2 the UP and DOWN arrow keys.</p>
+                </div>
                 <a href="./Ping/index.html" class="playLink">Play</a>
             </div>
         </div>
     </body>
+    <script>
+        var imageCount = document.getElementById("slideShow").childElementCount; 
+        var currentImage = 0;
+        function nextImage() {
+            var oldElement = document.getElementById("slideImage" + currentImage);
+            oldElement.className = oldElement.className.replace(" show", "");
+            currentImage++;
+            if(currentImage > imageCount - 1) {
+                currentImage = 0;
+            }
+            var newElement = document.getElementById("slideImage" + currentImage);
+            newElement.className = newElement.className + " show";
+        }
+        setInterval(nextImage, 10000);
+    </script>
 </html>
