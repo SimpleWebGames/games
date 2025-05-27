@@ -150,7 +150,7 @@
         </div>
     </body>
     <script>
-        var FRAME_INTERVAL_MS = 250;
+        var FRAME_INTERVAL_MS = 170;
         var previousTimeMs = 0;
         var running = false;
 
@@ -235,7 +235,7 @@
                     drawHead(xPosition, yPosition);
                     var headTile = tileFromPosition(xPosition, yPosition);
                     newSnakeOccupiedTiles.push(headTile);
-                    if(snakeOccupiedTiles.includes(headTile) || xPosition > canvasHeight || xPosition < 0 || yPosition > canvasHeight || yPosition < 0) {
+                    if(snakeOccupiedTiles.includes(headTile) || xPosition + 20 > canvasHeight || xPosition < 0 || yPosition + 20 > canvasHeight || yPosition < 0) {
                         gameOver();
                     }
                 } else {
@@ -363,13 +363,13 @@
         });
 
         document.getElementById("easyButton").addEventListener("click", function() {
-            FRAME_INTERVAL_MS = 500;
+            FRAME_INTERVAL_MS = 250;
             difficulty = "easy";
             rabbitProbability = 15;
         });
 
         document.getElementById("mediumButton").addEventListener("click", function() {
-            FRAME_INTERVAL_MS = 250;
+            FRAME_INTERVAL_MS = 170;
             difficulty = "medium";
             rabbitProbability = 30;
         });
