@@ -30,6 +30,7 @@
                 justify-content: space-evenly;
                 align-items: center;
                 margin-bottom: 20px;
+                background-color: saddlebrown;
             }
             #scoreContainer {
                 display: flex;
@@ -144,20 +145,21 @@
         </div>
     </body>
     <script>
+        var FRAME_INTERVAL_MS = 16;
+        var previousTimeMs = 0;
+        var running = false;
+
         var height = window.innerHeight - 100;
         var width = window.innerWidth;
 
         document.getElementById("canvas").height = height;
         document.getElementById("canvas").width = width;
 
-        console.log(height, screen.height, document.getElementById("canvas").height);
-
         var canvas = document.getElementById("canvas");
         var context = canvas.getContext("2d");
         var scoreBox = document.getElementById("score");
         var missedBox = document.getElementById("missedDucks");
 
-        var interval;
         var shotCooldown = 0;
         var cooldown = 0;
         var score = 0;
@@ -178,7 +180,6 @@
         var duckHead = new Image();
         var duckAss = new Image();
         var duckWing = new Image();
-        var duckScreamer = new Image();
         shot.src = "./assets/shot.png";
         blood.src = "./assets/blood.png"
         duck.src = "./assets/duck.png";
@@ -186,7 +187,6 @@
         duckHead.src = "./assets/duck_head.png";
         duckAss.src = "./assets/duck_ass.png";
         duckWing.src = "./assets/duck_wing.png";
-        duckScreamer.src = "./assets/duck_front.jpg";
 
         function randomInt(max, min) {
             var range = max - min;
@@ -220,10 +220,6 @@
 
         function drawDuck(x, y) {
             context.drawImage(duck, x, y);
-            //context.beginPath();
-            //context.fillStyle = "blue";
-            //context.fillRect(x, y, 100, 100);
-            //context.stroke();
         }
 
         function drawShot(x, y) {
@@ -252,10 +248,6 @@
                     context.drawImage(duckBelly, x, y);
                     break;
             }
-            //context.beginPath();
-            //context.fillStyle = "red";
-            //context.fillRect(x, y, 100, 100);
-            //context.stroke();
         }
 
         function updateDucks(elapsedTime) {
@@ -324,7 +316,6 @@
         }
         
         function getCadaverType(xShot, yShot) {
-            console.log(xShot)
             if(xShot < 65) {
                 return 0;
             } else if(xShot > 100) {
@@ -357,13 +348,9 @@
                     var duckY = parseInt(info[1]);
                     var duckXEnd = duckX + 140;
                     var duckYEnd = duckY + 100;
-                    console.log(duckX, duckY, duckXEnd, duckYEnd, x, y)
                     if(x >= duckX && x <= duckXEnd && y >= duckY && y <= duckYEnd) {
                         score++;
                         scoreBox.innerHTML = score;
-                        if(score == 10 || score == 69 || score == 100) {
-                            screamer();
-                        }
                         duckPositions.splice(i, 1)
                         var xShot = duckXEnd - x;
                         var yShot = duckYEnd - y;
@@ -422,25 +409,15 @@
             }
         }
 
-        function screamer() {
-            clearInterval(interval);
-            var quack = new Audio('./assets/quack.mp3');
-            quack.play();
-            context.drawImage(duckScreamer, 0, 0);
-            setTimeout(() => {
-                interval = setInterval(tick, 16);
-            }, 1000)
-        }
-
         document.getElementById("button").addEventListener("click", function() {
             switch(buttonAction) {
                 case "resume":
                     buttonAction = "pause";
                     document.getElementById("button").innerHTML = "Pause";
-                    interval = setInterval(tick, 16);
+                    running = true;
                     break;
                 case "pause":
-                    clearInterval(interval);
+                    running = false;
                     buttonAction = "resume";
                     document.getElementById("button").innerHTML = "Resume";
                     break;
@@ -453,7 +430,7 @@
                     buttonAction = "pause";
                     document.getElementById("button").innerHTML = "Pause";
                     initialize();
-                    interval = setInterval(tick, 16);
+                    running = true;
                     break;
                 default:
                     break;
@@ -475,25 +452,34 @@
         })
 
         function tick() {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            computeCollision();
-            updateSprites(elapsedTime);
-            updateCadaver(elapsedTime);
-            spawnNew();
-            updateDucks(elapsedTime);
-            if(cooldown > 0) {
-                cooldown--;
-            }
-            if(missedDucks >= 10) {
-                clearInterval(interval);
-                buttonAction = "start";
-                document.getElementById("button").innerHTML = "Restart";
-                document.getElementById("gameOverUi").style.display = 'block';
-                var bestScore = document.getElementById("bestScore").innerHTML;
-                if(bestScore < score) {
-                    document.getElementById("bestScore").innerHTML = score;
+            requestAnimationFrame((currentTimeMs) => {
+                var deltaTimeMs = currentTimeMs - previousTimeMs;
+                if(deltaTimeMs >= FRAME_INTERVAL_MS && running) {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    computeCollision();
+                    updateSprites(elapsedTime);
+                    updateCadaver(elapsedTime);
+                    spawnNew();
+                    updateDucks(elapsedTime);
+                    if(cooldown > 0) {
+                        cooldown--;
+                    }
+                    if(missedDucks >= 10) {
+                        running = false;
+                        buttonAction = "start";
+                        document.getElementById("button").innerHTML = "Restart";
+                        document.getElementById("gameOverUi").style.display = 'block';
+                        var bestScore = document.getElementById("bestScore").innerHTML;
+                        if(bestScore < score) {
+                            document.getElementById("bestScore").innerHTML = score;
+                        }
+                    }
+
+                    previousTimeMs = currentTimeMs;
                 }
-            }
+                tick();
+            });
         }
+        tick();
     </script>
 </html>
