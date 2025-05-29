@@ -76,11 +76,11 @@
             .game {
                 display: flex;
                 flex-direction: row;
-                align-items: center;
                 justify-content: space-between;
                 width: 90%;
                 max-width: 900px;
-                height: 120px;
+                height: auto;
+                min-height: 120px;
                 padding-left: 10px;
                 padding-right: 10px;
                 margin-bottom: 20px;
@@ -91,15 +91,44 @@
             .gameText {
                 width: 100%;
                 height: 100%;
+                margin-top: 20px;
+                margin-bottom: 20px;
                 text-shadow: 1px 1px black;
-                overflow: hidden;
+            }
+            .gameTitleBox {
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+                height: fit-content;
+                margin-bottom: 10px;
             }
             .gameTitle {
                 font-size: 21px;
-                margin-top: 20px;
-                margin-bottom: 10px;
+                margin-right: 10px;
+            }
+            .tag {
+                padding-top: 2px;
+                padding-bottom: 2px;
+                padding-left: 4px;
+                padding-right: 4px;
+                margin-right: 5px;
+                font-size: 12px;
+                border-radius: 6px;
+            }
+            .tagViolent {
+                color: #FF3A30;
+                border: 1px solid #FF3A30;
+            }
+            .tagArcade {
+                color: #FFCC00;
+                border: 1px solid #FFCC00;
+            }
+            .tagLowFPS {
+                color: #34C759;
+                border: 1px solid #34C759;
             }
             .playLink {
+                align-self: center;
                 height: fit-content;
                 padding: 15px;
                 margin-left: 10px;
@@ -111,9 +140,9 @@
     </head>
     <body>
         <div id="slideShow">
-            <img id="slideImage0" class="slideImage show" src="./assets/images/cycles.png"/>
-            <img id="slideImage1" class="slideImage" src="./assets/images/ping.png"/>
-            <img id="slideImage2" class="slideImage" src="./assets/images/snake.png"/>
+            <img id="slideImage0" class="slideImage show" src="./assets/images/cycles2.png"/>
+            <img id="slideImage1" class="slideImage" src="./assets/images/ping2.png"/>
+            <img id="slideImage2" class="slideImage" src="./assets/images/snake2.png"/>
             <img id="slideImage3" class="slideImage" src="./assets/images/memory.png"/>
         </div>
         <div id="header">
@@ -123,28 +152,39 @@
             <p class="sectionTitle">Single player games</p>
             <div class="game">
                 <div class="gameText">
-                    <p class="gameTitle">Duck</p>
+                    <div class="gameTitleBox">
+                        <p class="gameTitle">Duck</p>
+                        <p class="tag tagViolent">Violent</p>
+                    </div>
                     <p>Shoot the ducks by clicking on them. If you miss 10 ducks, you lose.</p>
                 </div>
                 <a href="./Duck Shooter/index.html" class="playLink">Play</a>
             </div>
             <div class="game">
                 <div class="gameText">
-                    <p class="gameTitle">Memory</p>
+                    <div class="gameTitleBox">
+                        <p class="gameTitle">Memory</p>
+                    </div>
                     <p>Click on two identical cards to make them disappear.</p>
                 </div>
                 <a href="./Memory/jeu.html" class="playLink">Play</a>
             </div>
             <div class="game">
                 <div class="gameText">
-                    <p class="gameTitle">Pepe Mining Simulator</p>
+                    <div class="gameTitleBox">
+                        <p class="gameTitle">Pepe Mining Simulator</p>
+                    </div>
                     <p>Mine pepe coins to buy items.</p>
                 </div>
                 <a href="./PepeMiningSimulator/index.html" class="playLink">Play</a>
             </div>
             <div class="game">
                 <div class="gameText">
-                    <p class="gameTitle">Snake</p>
+                    <div class="gameTitleBox">
+                        <p class="gameTitle">Snake</p>
+                        <p class="tag tagArcade">Arcade style</p>
+                        <p class="tag tagLowFPS">Low FPS</p>
+                    </div>
                     <p>Become as big as possible by eating apples. If you eat yourself or hit the wall, you lose. Use the arrow keys to change direction.</p>
                 </div>
                 <a href="./Snake/index.html" class="playLink">Play</a>
@@ -152,14 +192,21 @@
             <p class="sectionTitle">Two players games</p>
             <div class="game">
                 <div class="gameText">
-                    <p class="gameTitle">Cycles</p>
+                    <div class="gameTitleBox">
+                        <p class="gameTitle">Cycles</p>
+                        <p class="tag tagArcade">Arcade style</p>
+                        <p class="tag tagLowFPS">Low FPS</p>
+                    </div>
                     <p>Tow players battle each other. If you hit your trail, the trail of the other player or the wall, you lose. Player 1 uses the arrow keys to change direction and Player 2 the W, A, S and D keys.</p>
                 </div>
                 <a href="./Cycles/index.html" class="playLink">Play</a>
             </div>
             <div class="game">
                 <div class="gameText">
-                    <p class="gameTitle">Ping</p>
+                    <div class="gameTitleBox">
+                        <p class="gameTitle">Ping</p>
+                        <p class="tag tagArcade">Arcade style</p>
+                    </div>
                     <p>Score points by sending the ball past your opponent's paddle. Player 1 uses the W and S keys to move the paddle up dans down and Player 2 the UP and DOWN arrow keys.</p>
                 </div>
                 <a href="./Ping/index.html" class="playLink">Play</a>
