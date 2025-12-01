@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Sicario</title>
+        <meta charset="utf8"/>
+        <style>
+            html, body {
+                height: auto;
+                width: auto;
+		        margin: 0px;
+                background-color: black;
+            }
+            p {
+                font-family: monospace;
+                font-size: 24px;
+                color: white;
+                margin: 0px;
+            }
+            #container {
+                height: 100%;
+                width: 100%;
+                text-align: center;
+            }
+            #uiContainer {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                height: 110px;
+                align-items: center;
+                margin-bottom: 20px;
+                background-color: grey;
+            }
+            #infoContainer1, #infoContainer2 {
+                display: flex;
+                flex-direction: column;
+                width: 20%;
+                text-align: center;
+                justify-content: center;
+            }
+            #infoContainer1 {
+                align-items: flex-start;
+            }
+            #infoContainer2 {
+                align-items: flex-end;
+            }
+            .dataContainer {
+                display: flex;
+                flex-direction: row;
+            }
+            .score1P {
+                color: #007BFF;
+            }
+            .score2P {
+                color: #FF3A30;
+            }
+            .gunImg {
+                height: 100%;
+                width: 165px;
+                margin-left: 10px;
+                margin-right: 10px;
+                object-fit: contain;
+                image-rendering: pixelated;
+                border: none;
+            }
+            #button {
+                width: 20%;
+                height: 60px;
+                margin-left: auto;
+                margin-right: auto;
+                background-color: black;
+                border-color: white;
+                border-width: 5px;
+                border-radius: 10px;
+                border-style: solid;
+                font-family: monospace;
+                font-size: 24px;
+                color: white;
+            }
+            #gameOverUi {
+                position: absolute;
+                padding: 30px;
+                top: 50%;
+                left: 0px;
+                right: 0px;
+                display: none;
+                justify-content: center;
+                text-align: center;
+                background-color: rgba(0, 0, 0, 0.85);
+                z-index: 1;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="uiContainer">
+                <img class="gunImg" id="img1"/>
+                <div id="infoContainer1">
+                    <div class="dataContainer">
+                        <p class="score1P">Player 1 health:&nbsp;</p>
+                        <p id="health1">100</p>
+                    </div>
+                    <div class="dataContainer">
+                        <p>Armor:&nbsp;</p>
+                        <p id="armor1">0</p>
+                    </div>
+                    <div class="dataContainer">
+                        <p>Ammo:&nbsp;</p>
+                        <p id="ammo1">0</p>
+                    </div>
+                    <p id="lock1">Unlocked</p>
+                </div>
+                <button id="button">Play</button>
+                <div id="infoContainer2">
+                    <div class="dataContainer">
+                        <p class="score2P">Player 2 health:&nbsp;</p>
+                        <p id="health2">100</p>
+                    </div>
+                    <div class="dataContainer">
+                        <p>Armor:&nbsp;</p>
+                        <p id="armor2">0</p>
+                    </div>
+                    <div class="dataContainer">
+                        <p>Ammo:&nbsp;</p>
+                        <p id="ammo2">0</p>
+                    </div>
+                    <p id="lock2">Unlocked</p>
+                </div>
+                <img class="gunImg" id="img2"/>
+            </div>
+            <div id="gameOverUi">
+                <p id="gameOverText">Game over !</p>
+            </div>
+            <canvas id="canvas"></canvas>
+        </div>
+    </body>
+    <script>
+        var FRAME_INTERVAL_MS = 16;
+        var previousTimeMs = 0;
+        var running = false;
+
+        var height = window.innerHeight - 130;
+        var canvasHeight = Math.floor(height / 100) * 100;
+        var canvasWidth = canvasHeight * 1.8;
+
+        document.getElementById("canvas").height = canvasHeight;
+        document.getElementById("canvas").width = canvasWidth;
+
+        var canvas = document.getElementById("canvas");
+        var context = canvas.getContext("2d");
+
+        var buttonAction = "start";
+        
+        var keyMap = {};
+        const degrees = Math.PI / 180;
+        var movingSpeed = 4;
+        var playerHeight = 20;
+        var halfPlayer = playerHeight / 2;
+
+        var colorBlue = "#007BFF";
+        var colorRed = "#FF3A30";
+
+        //Terrain data
+        var terrain = [];
+        var ground = new Image();
+        ground.src = "./assets/ground.png";
+        var pattern = context.createPattern(ground, "repeat");
+        var roof1x1 = new Image();
+        roof1x1.src = "./assets/roof1x1.png";
+        var roof2x3 = new Image();
+        roof2x3.src = "./assets/roof2x3.png";
+        var roof3x2 = new Image();
+        roof3x2.src = "./assets/roof3x2.png";
+        var roof1x4 = new Image();
+        roof1x4.src = "./assets/roof1x4.png";
+        var roof4x1 = new Image();
+        roof4x1.src = "./assets/roof4x1.png";
+        var terrainInfo = new Map([
+            [0, [2, 2, roof1x1]],
+            [1, [2, 3, roof2x3]],
+            [2, [3, 2, roof3x2]],
+            [3, [1, 4, roof1x4]],
+            [4, [4, 1, roof4x1]]
+        ]);
+
+        //Destructibles data
+        var destructibles = [];
+        var barrel = new Image();
+        barrel.src = "./assets/barrel.png";
+
+        //Sprites data
+        var sprites = [];
+        var blood = new Image();
+        blood.src = "./assets/blood.png";
+        var explosion = new Image();
+        explosion.src = "./assets/explosion.png";
+
+        //Players data
+        var player1Cooldown = 0;
+        var player1Weapon = 0;
+        var player1Health = 0;
+        var player1Armor = 0;
+        var player1Ammo = 0;
+        var player1X = 0;
+        var player1Y = 0;
+        var player1D = 0;
+        var player1Lock = false;
+        var player1UP = new Image();
+        player1UP.src = "./assets/playerBlueUP.png";
+        var player1DOWN = new Image();
+        player1DOWN.src = "./assets/playerBlueDOWN.png";
+        var player1LEFT = new Image();
+        player1LEFT.src = "./assets/playerBlueLEFT.png";
+        var player1RIGHT = new Image();
+        player1RIGHT.src = "./assets/playerBlueRIGHT.png";
+
+        var player2Cooldown = 0;
+        var player2Weapon = 0;
+        var player2Health = 0;
+        var player2Armor = 0;
+        var player2Ammo = 0;
+        var player2X = 0;
+        var player2Y = 0;
+        var player2D = 0;
+        var player2Lock = false;
+        var player2UP = new Image();
+        player2UP.src = "./assets/playerRedUP.png";
+        var player2DOWN = new Image();
+        player2DOWN.src = "./assets/playerRedDOWN.png";
+        var player2LEFT = new Image();
+        player2LEFT.src = "./assets/playerRedLEFT.png";
+        var player2RIGHT = new Image();
+        player2RIGHT.src = "./assets/playerRedRIGHT.png";
+
+        //Bullets data
+        var bullets = [];
+        var regularBulletSpeed = 15; //MUST BE lower than playerwidth/playerheight
+        var fastBulletSpeed = 20; //MUST BE lower than playerwidth/playerheight
+        var bullet = new Image();
+        bullet.src = "./assets/bullet.png";
+        var rpgUP = new Image();
+        rpgUP.src = "./assets/rocketUP.png";
+        var rpgDOWN = new Image();
+        rpgDOWN.src = "./assets/rocketDOWN.png";
+        var rpgLEFT = new Image();
+        rpgLEFT.src = "./assets/rocketLEFT.png";
+        var rpgRIGHT = new Image();
+        rpgRIGHT.src = "./assets/rocketRIGHT.png";
+        var bulletsInfo = new Map([
+            [0, [halfPlayer - 2, -1, 180]],
+            [1, [playerHeight + 1, halfPlayer - 2, 90]],
+            [2, [halfPlayer - 2, playerHeight + 1, 0]],
+            [3, [-1, halfPlayer - 2, 270]],
+        ]);
+
+        //Guns data
+        var guns = [];
+        var gunChance = 600;
+        var pistol = new Image();
+        pistol.src = "./assets/pistol.png";
+        var shotgun = new Image();
+        shotgun.src = "./assets/shotgun.png";
+        var machineGun = new Image();
+        machineGun.src = "./assets/machineGun.png";
+        var sniper = new Image();
+        sniper.src = "./assets/sniper.png";
+        var rpg = new Image();
+        rpg.src = "./assets/rpg.png";
+
+        //Items data
+        var items = [];
+        var itemsChance = 1200;
+        var medkit = new Image();
+        medkit.src = "./assets/medkit.png";
+        var vest = new Image();
+        vest.src = "./assets/bulletproofVest.png";
+
+        function randomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
+        function clamp(x, min, max) {
+            return Math.min(Math.max(x, min), max);
+        }
+
+        function drawBuilding(x, y, w, h, asset) {
+            context.drawImage(asset, x, y, w, h);
+        }
+
+        function drawTerrain() {
+            context.fillStyle = pattern;
+            context.fillRect(0, 0, canvasWidth, canvasHeight);
+            for(var i = 0; i < terrain.length; i++) {
+                var object = terrain[i];
+                var objectType = object.type;
+                if(objectType == 0) {
+                    drawBuilding(object.x, object.y, object.w, object.h, object.asset);
+                }
+            }
+        }
+
+        function generateTerrain() {
+            var buildingCount = randomInt(6) + 4;
+
+            var maxDimen = canvasHeight / 6;
+            var minDimen = maxDimen / 1.5;
+
+            for(var i = 0; i < buildingCount; i++) {
+                var buildingData = terrainInfo.get(randomInt(5));
+
+                var scaling = clamp(randomInt(maxDimen), minDimen, maxDimen);
+
+                var width = buildingData[0] * scaling;
+                var height = buildingData[1] * scaling;
+                var x = randomInt(canvasWidth - (width + 40)) + 20;
+                var y = randomInt(canvasHeight - (height + 40)) + 20;
+                var change = hitBuilding(x - 20, y - 20, width + 40, height + 40, true); //make building larger to allow small passages
+                if(change[0]) {
+                    x += change[1];
+                    y += change[2];
+                }
+
+                //Spawn building only if not on players
+                if(!hitObject(player1X, player1Y, playerHeight, playerHeight, x, y, width, height) && !hitObject(player2X, player2Y, playerHeight, playerHeight, x, y, width, height)) {
+                    terrain.push({type: 0, x: x, y: y, w: width, h: height, asset: buildingData[2]});
+                }
+            }
+
+            var destructibleCount = randomInt(10) + 4;
+            for(var j = 0; j < destructibleCount; j++) {
+                var x = randomInt(canvasWidth - 20);
+                var y = randomInt(canvasHeight - 20);
+
+                var change = hitBuilding(x, y, 20, 30, true);
+                if(change[0]) {
+                    x += change[1];
+                    y += change[2];
+                }
+                destructibles.push({type: 0, x: x, y: y});
+            }
+        }
+
+        function drawDestructibles() {
+            for(var i = 0; i < destructibles.length; i++) {
+                var destructible = destructibles[i];
+                if(destructible.type == 0) {
+                    context.drawImage(barrel, destructible.x, destructible.y);
+                }
+            }
+        }
+
+        function drawSprite(x, y, type) {
+            if(type == 0) {
+                context.drawImage(blood, x, y);
+            } else if(type == 1) {
+                context.drawImage(explosion, x, y);
+            }
+        }
+
+        function drawSprites() {
+            for(var i = 0; i < sprites.length; i++) {
+                var sprite = sprites[i];
+                drawSprite(sprite.x, sprite.y, sprite.type);
+                sprite.time -= FRAME_INTERVAL_MS;
+                if(sprite.time <= 0) {
+                    sprites.splice(i, 1); 
+                    i--;
+                }
+            }
+        }
+
+        function drawPlayer(x, y, type) {
+            if(type == 0) {
+                if(player1D == 0) {
+                    context.drawImage(player1UP, x, y);
+                } else if(player1D == 1) {
+                    context.drawImage(player1RIGHT, x, y);
+                } else if(player1D == 2) {
+                    context.drawImage(player1DOWN, x, y);
+                } else if(player1D == 3) {
+                    context.drawImage(player1LEFT, x, y);
+                }
+            } else if(type == 1) {
+                if(player2D == 0) {
+                    context.drawImage(player2UP, x, y);
+                } else if(player2D == 1) {
+                    context.drawImage(player2RIGHT, x, y);
+                } else if(player2D == 2) {
+                    context.drawImage(player2DOWN, x, y);
+                } else if(player2D == 3) {
+                    context.drawImage(player2LEFT, x, y);
+                }
+            }
+        }
+
+        function drawPlayers() {
+            drawPlayer(player1X, player1Y, 0);
+            drawPlayer(player2X, player2Y, 1);
+        }
+
+        function drawBullet(x, y, d, type) {
+            if(type == 4) {
+                if(d == 180) {
+                    context.drawImage(rpgUP, x - 5, y - 5);
+                } else if(d == 90) {
+                    context.drawImage(rpgRIGHT, x - 5, y - 5);
+                } else if(d == 0) {
+                    context.drawImage(rpgDOWN, x - 5, y - 5);
+                } else if(d == 270) {
+                    context.drawImage(rpgLEFT, x - 5, y - 5);
+                }
+            } else {
+                context.drawImage(bullet, x, y);
+            }
+        }
+
+        function drawBullets() {
+            for(var i = 0; i < bullets.length; i++) {
+                var bullet = bullets[i];
+                var bulletX = bullet.x;
+                var bulletY = bullet.y;
+                var bulletD = bullet.d;
+                var bulletType = bullet.type;
+                var bulletSpeed = bulletType == 3 ? fastBulletSpeed : regularBulletSpeed;
+
+                drawBullet(bulletX, bulletY, bulletD, bulletType);
+
+                var angle = bulletD * degrees;
+                bullets[i].x += (bulletSpeed * Math.sin(angle));
+                bullets[i].y += (bulletSpeed * Math.cos(angle));
+            }
+        }
+
+        function drawGun(x, y, type) {
+            if(type == 0) {
+                context.drawImage(pistol, x, y);
+            } else if(type == 1) {
+                context.drawImage(shotgun, x - 5, y);
+            } else if(type == 2) {
+                context.drawImage(machineGun, x - 5, y);
+            } else if(type == 3) {
+                context.drawImage(sniper, x - 5, y);
+            } else if(type == 4) {
+                context.drawImage(rpg, x - 5, y);
+            }
+        }
+
+        function drawGuns() {
+            for(var i = 0; i < guns.length; i++) {
+                var gun = guns[i];
+                drawGun(gun.x, gun.y, gun.type);
+            }
+        }
+
+        function drawItem(x, y, type) {
+            if(type == 0) {
+                context.drawImage(medkit, x, y);
+            } else if(type == 1) {
+                context.drawImage(vest, x, y);
+            }
+        }
+
+        function drawItems() {
+            for(var i = 0; i < items.length; i++) {
+                var item = items[i];
+                drawItem(item.x, item.y, item.type);
+            }
+        }
+        
+        function generateGunsAndItems() {
+            if(guns.length == 0) {
+                var chance = randomInt(gunChance);
+                if(chance == 0) {
+                    var gunCount = randomInt(2) + 1;
+
+                    var gun1X = randomInt(canvasWidth - 20); //-20 gun image width
+                    var gun1Y = randomInt(canvasHeight - 20); //-20 gun image height
+                    var change1 = hitBuilding(gun1X, gun1Y, 20, 20, true);
+                    if(change1[0]) {
+                        gun1X += change1[1];
+                        gun1Y += change1[2];
+                    }
+
+                    //Spawn gun only if outside of building
+                    if(!hitBuilding(gun1X, gun1Y, 20, 20, false)[0]) {
+                        var gun1Type = randomInt(5);
+                        guns.push({x: gun1X, y: gun1Y, type: gun1Type});
+                    }
+                    
+                    if(gunCount == 2) {
+                        var gun2X = randomInt(canvasWidth - 20); //-20 gun image width
+                        var gun2Y = randomInt(canvasHeight - 20); //-20 gun image height
+                        var change2 = hitBuilding(gun2X, gun2Y, 20, 20, true);
+                        if(change2[0]) {
+                            gun2X += change2[1];
+                            gun2Y += change2[2];
+                        }
+
+                        //Spawn gun only if outside of building
+                        if(!hitBuilding(gun2X, gun2Y, 20, 20, false)[0]) {
+                            var gun2Type = randomInt(5);
+                            guns.push({x: gun2X, y: gun2Y, type: gun2Type});
+                        }
+                    }
+                }
+            }
+            if(items.length == 0) {
+                var chance = randomInt(itemsChance);
+                if(chance == 0) {
+                    var itemX = randomInt(canvasWidth - 20); //-20 item image width
+                    var itemY = randomInt(canvasHeight - 20); //-20 item image height
+                    var change = hitBuilding(itemX, itemY, 20, 20, true);
+                    if(change[0]) {
+                        itemX += change[1];
+                        itemY += change[2];
+                    }
+
+                    //Spawn item only if outside of building
+                    if(!hitBuilding(itemX, itemY, 20, 20, false)[0]) {
+                        var itemType = randomInt(2);
+                        items.push({x: itemX, y: itemY, type: itemType});
+                    }
+                }
+            }
+        }
+
+        function hitObject(x1, y1, w1, h1, x2, y2, w2, h2) {
+            if((x1 <= x2 + w2 && x2 <= x1 + w1) && (y1 <= y2 + h2 && y2 <= y1 + h1)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        function hitBuilding(x, y, w, h, compute) {
+            var hit = false;
+            var finalX = 0;
+            var finalY = 0;
+            for(var i = 0; i < terrain.length; i++) {
+                var object = terrain[i];
+                if(object.type == 0) {
+                    if(hitObject(object.x, object.y, object.w, object.h, x, y, w, h)) {
+                        if(compute) {
+                            var xLeft = (x + w) - object.x;
+                            var xRight =  (object.x + object.w) - x;
+                            var xMove = Math.abs(xLeft) < Math.abs(xRight) ? -xLeft : xRight;
+
+                            var yTop = (y + h) - object.y;
+                            var yBottom = (object.y + object.h) - y;
+                            var yMove = Math.abs(yTop) < Math.abs(yBottom) ? -yTop : yBottom;
+
+                            Math.abs(yMove) < Math.abs(xMove) ? xMove = 0 : yMove = 0;
+
+                            hit = true;
+                            finalX += xMove;
+                            finalY += yMove;
+                        } else {
+                            hit = true;
+                        }
+                    }
+                }
+            }
+            return [hit, finalX, finalY];
+        }
+
+        function generateExplosion(x, y) {
+            dealExplosionDamage(x, y);
+            sprites.push({type: 1, time: 2000, x: x - 50, y: y - 50});
+            var explosion = new Audio('./assets/explosion.mp3');
+            explosion.play();
+        }
+
+        function dealExplosionDamage(x, y) {
+            var player1XDist = x - player1X;
+            var player1YDist = y - player1Y;
+            var player1Dist = Math.sqrt((player1XDist ** 2) + (player1YDist ** 2));
+            if(player1Dist <= 100) {
+                var damage = Math.floor(110 - player1Dist);
+                dealDamage(0, damage);
+            }
+
+            var player2XDist = x - player2X;
+            var player2YDist = y - player2Y;
+            var player2Dist = Math.sqrt((player2XDist ** 2) + (player2YDist ** 2));
+            if(player2Dist <= 100) {
+                var damage = Math.floor(110 - player2Dist);
+                dealDamage(1, damage);
+            }
+        }
+
+        function dealDamage(type, damage) {
+            if(type == 0) {
+                var newArmorValue = player1Armor - damage;
+                if(newArmorValue < 0) {
+                    player1Armor = 0;
+                    player1Health += newArmorValue;
+                } else {
+                    player1Armor = newArmorValue;
+                }
+
+                document.getElementById("health1").innerHTML = player1Health;
+                document.getElementById("armor1").innerHTML = player1Armor;
+            } else if(type == 1) {
+                var newArmorValue = player2Armor - damage;
+                if(newArmorValue < 0) {
+                    player2Armor = 0;
+                    player2Health += newArmorValue;
+                } else {
+                    player2Armor = newArmorValue;
+                }
+
+                document.getElementById("health2").innerHTML = player2Health;
+                document.getElementById("armor2").innerHTML = player2Armor;
+            }
+        }
+
+        function checkObjectCollision() {
+            //Bullet checks
+            for(var i = 0; i < bullets.length; i++) {
+                var removeBullet = false;
+                var bullet = bullets[i];
+                var bulletX = bullet.x;
+                var bulletY = bullet.y;
+                var bulletType = bullet.type;
+
+                if(hitObject(player1X, player1Y, playerHeight, playerHeight, bulletX, bulletY, 4, 4)) {
+                    //Player 1 hit
+                    if(bulletType == 0) {
+                        dealDamage(0, 10);
+                    } else if(bulletType == 1) {
+                        dealDamage(0, 30);
+                    } else if(bulletType == 2) {
+                        dealDamage(0, 5);
+                    } else if(bulletType == 3) {
+                        dealDamage(0, 70);
+                    } else if(bulletType == 4) {
+                        generateExplosion(bulletX + 2, bulletY + 2);
+                    }
+
+                    bloodOffset = randomInt(14) - 15;
+                    sprites.push({type: 0, time: 10000, x: bulletX + bloodOffset, y: bulletY + bloodOffset});
+
+                    removeBullet = true;
+                }
+
+                if(hitObject(player2X, player2Y, playerHeight, playerHeight, bulletX, bulletY, 4, 4)) {
+                    //Player 2 hit
+                    if(bulletType == 0) {
+                        dealDamage(1, 10);
+                    } else if(bulletType == 1) {
+                        dealDamage(1, 30);
+                    } else if(bulletType == 2) {
+                        dealDamage(1, 5);
+                    } else if(bulletType == 3) {
+                        dealDamage(1, 70);
+                    } else if(bulletType == 4) {
+                        generateExplosion(bulletX + 2, bulletY + 2);
+                    }
+
+                    bloodOffset = randomInt(14) - 15;
+                    sprites.push({type: 0, time: 10000, x: bulletX + bloodOffset, y: bulletY + bloodOffset});
+
+                    removeBullet = true;
+                }
+
+                for(var l = 0; l < destructibles.length; l++) {
+                    var destructible = destructibles[l];
+                    if(hitObject(destructible.x, destructible.y, 20, 30, bulletX, bulletY, 4, 4)) {
+                        //Destructible hit
+                        if(destructible.type == 0) {
+                            generateExplosion(destructible.x + 10, destructible.y + 15);
+                        }
+                        
+                        destructibles.splice(l, 1); 
+                        l--;
+
+                        removeBullet = true;
+                    }
+                }
+
+                if((bulletX < 0 || bulletX > canvasWidth || bulletY < 0 || bulletY > canvasHeight) || hitBuilding(bulletX, bulletY, 4, 4, false)[0]) {
+                    if(bulletType == 4) {
+                        generateExplosion(bulletX + 2, bulletY + 2);
+                    }
+
+                    removeBullet = true;
+                }
+
+                if(removeBullet) {
+                    bullets.splice(i, 1); 
+                    i--;
+                }
+            }
+        
+            //Guns checks
+            for(var j = 0; j < guns.length; j++) {
+                var removeGun = false;
+                var gun = guns[j];
+                var gunX = gun.x;
+                var gunY = gun.y;
+                var gunType = gun.type;
+
+                if(hitObject(player1X, player1Y, playerHeight, playerHeight, gunX, gunY, 20, 20)) {
+                    //Player 1 gets gun
+                    player1Weapon = gunType;
+                    if(gunType == 0) {
+                        player1Ammo = 20;
+                        document.getElementById("img1").src = pistol.src;
+                    } else if(gunType == 1) {
+                        player1Ammo = 9;
+                        document.getElementById("img1").src = shotgun.src;
+                    } else if(gunType == 2) {
+                        player1Ammo = 200;
+                        document.getElementById("img1").src = machineGun.src;
+                    } else if(gunType == 3) {
+                        player1Ammo = 10;
+                        document.getElementById("img1").src = sniper.src;
+                    } else if(gunType == 4) {
+                        player1Ammo = 3;
+                        document.getElementById("img1").src = rpg.src;
+                    }
+                    document.getElementById("ammo1").innerHTML = player1Ammo;
+
+                    removeGun = true;
+                }
+
+                if(hitObject(player2X, player2Y, playerHeight, playerHeight, gunX, gunY, 20, 20)) {
+                    //Player 2 gets gun
+                    player2Weapon = gunType;
+                    if(gunType == 0) {
+                        player2Ammo = 20;
+                        document.getElementById("img2").src = pistol.src;
+                    } else if(gunType == 1) {
+                        player2Ammo = 9;
+                        document.getElementById("img2").src = shotgun.src;
+                    } else if(gunType == 2) {
+                        player2Ammo = 200;
+                        document.getElementById("img2").src = machineGun.src;
+                    } else if(gunType == 3) {
+                        player2Ammo = 10;
+                        document.getElementById("img2").src = sniper.src;
+                    } else if(gunType == 4) {
+                        player2Ammo = 3;
+                        document.getElementById("img2").src = rpg.src;
+                    }
+                    document.getElementById("ammo2").innerHTML = player2Ammo;
+                    
+                    removeGun = true;
+                }
+
+                if(removeGun) {
+                    guns.splice(j, 1); 
+                    j--;
+                }
+            }
+
+            //Items checks
+            for(var k = 0; k < items.length; k++) {
+                var removeItem = false;
+                var item = items[k];
+                var itemX = item.x;
+                var itemY = item.y;
+                var itemType = item.type;
+
+                if(hitObject(player1X, player1Y, playerHeight, playerHeight, itemX, itemY, 20, 20)) {
+                    //Player 1 gets item
+                    if(itemType == 0 && player1Health < 75) {
+                        player1Health = Math.min(75, player1Health + 50);
+                        document.getElementById("health1").innerHTML = player1Health;
+                    } else if(itemType == 1) {
+                        player1Armor = 50;
+                        document.getElementById("armor1").innerHTML = player1Armor;
+                    }
+
+                    removeItem = true;
+                }
+
+                if(hitObject(player2X, player2Y, playerHeight, playerHeight, itemX, itemY, 20, 20)) {
+                    //Player 2 gets item
+                    if(itemType == 0 && player2Health < 75) {
+                        player2Health = Math.min(75, player2Health + 50);
+                        document.getElementById("health2").innerHTML = player2Health;
+                    } else if(itemType == 1) {
+                        player2Armor = 50;
+                        document.getElementById("armor2").innerHTML = player2Armor;
+                    }
+                    
+                    removeItem = true;
+                }
+
+                if(removeItem) {
+                    items.splice(k, 1); 
+                    k--;
+                }
+            }
+        }
+
+        function initialize() {
+            pattern = context.createPattern(ground, "repeat"); //Reload image just in case
+
+            player1X = 10;
+            player2X = canvasWidth - 30;
+            player1Y = player2Y = canvasHeight / 2;
+            player1D = 1;
+            player2D = 3;
+
+            terrain = [];
+            destructibles = [];
+            generateTerrain();
+
+            sprites = [];
+
+            player1Cooldown = 0;
+            player1Weapon = 0;
+            player1Health = 100;
+            player1Armor = 10;
+            player1Ammo = 20;
+            document.getElementById("health1").innerHTML = player1Health;
+            document.getElementById("armor1").innerHTML = player1Armor;
+            document.getElementById("ammo1").innerHTML = player1Ammo;
+            document.getElementById("img1").src = pistol.src;
+
+            player2Cooldown = 0;
+            player2Weapon = 0;
+            player2Health = 100;
+            player2Armor = 10;
+            player2Ammo = 20;
+            document.getElementById("health2").innerHTML = player2Health;
+            document.getElementById("armor2").innerHTML = player2Armor;
+            document.getElementById("ammo2").innerHTML = player2Ammo;
+            document.getElementById("img2").src = pistol.src;
+
+            bullets = [];
+            guns = [];
+        }
+
+        function checkGameOver() {
+            if(player1Health <= 0 || player2Health <= 0) {
+                running = false;
+                buttonAction = "start";
+                document.getElementById("button").innerHTML = "Restart";
+                canvas.style.filter = "grayscale(100%)";
+                var gameOverMessage = document.getElementById("gameOverText");
+                if(player1Health <= 0) {
+                    gameOverMessage.innerHTML = "Player 2 wins";
+                    gameOverMessage.style.color = "#FF3A30";
+                } else if(player2Health <= 0) {
+                    gameOverMessage.innerHTML = "Player 1 wins";
+                    gameOverMessage.style.color = "#007BFF";
+                }
+                document.getElementById("gameOverUi").style.display = 'block';
+            }
+        }
+
+        onkeydown = onkeyup = function(event) {
+            keyMap[event.keyCode] = event.type == 'keydown';
+
+            //Player 1 lock
+            if(keyMap[67]) {
+                player1Lock = !player1Lock;
+                if(player1Lock) {
+                    document.getElementById("lock1").innerHTML = "Locked";
+                } else {
+                    document.getElementById("lock1").innerHTML = "Unlocked";
+                }
+            }
+
+            //Player 2 lock
+            if(keyMap[78]) {
+                player2Lock = !player2Lock;
+                if(player2Lock) {
+                    document.getElementById("lock2").innerHTML = "Locked";
+                } else {
+                    document.getElementById("lock2").innerHTML = "Unlocked";
+                }
+            }
+        }
+
+        document.getElementById("button").addEventListener("click", function() {
+            switch(buttonAction) {
+                case "resume":
+                    running = true;
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    break;
+                case "pause":
+                    running = false;
+                    buttonAction = "resume";
+                    document.getElementById("button").innerHTML = "Resume";
+                    break;
+                case "start":
+                    canvas.style.filter = "grayscale(0%)";
+                    document.getElementById("gameOverUi").style.display = 'none';
+                    initialize();
+                    running = true;
+                    buttonAction = "pause";
+                    document.getElementById("button").innerHTML = "Pause";
+                    break;
+                default:
+                    break;
+            }
+        });
+        
+        function tick() {
+            requestAnimationFrame((currentTimeMs) => {
+                var deltaTimeMs = currentTimeMs - previousTimeMs;
+                if(deltaTimeMs >= FRAME_INTERVAL_MS && running) {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+
+                    //87 -> W
+                    //83 -> S
+                    //68 -> D
+                    //65 -> A
+                    //69 => E shoot
+                    //67 => C lock direction
+
+                    //73 -> I
+                    //75 -> K
+                    //76 -> L
+                    //74 -> j
+                    //85 => U shoot
+                    //78 => N lock direction
+
+                    //Player 1 movement
+                    var x1Dir = (keyMap[68] ? movingSpeed : 0) + (keyMap[65] ? -movingSpeed : 0);
+                    var y1Dir = (keyMap[83] ? movingSpeed : 0) + (keyMap[87] ? -movingSpeed : 0);
+                    player1X = clamp(x1Dir + player1X, 0, canvasWidth - playerHeight);
+                    player1Y = clamp(y1Dir + player1Y, 0, canvasHeight - playerHeight);
+                    var change1 = hitBuilding(player1X, player1Y, playerHeight, playerHeight, true);
+                    if(change1[0]) {
+                        player1X += change1[1];
+                        player1Y += change1[2];
+                    }
+                    //Player 1 shot direction
+                    if(!player1Lock) {
+                        if(x1Dir > 0) {
+                            player1D = 1;
+                        } else if(x1Dir < 0) {
+                            player1D = 3;
+                        } else if(y1Dir > 0) {
+                            player1D = 2;
+                        } else if(y1Dir < 0) {
+                            player1D = 0;
+                        }
+                    }
+
+                    //Player 2 movement
+                    var x2Dir = (keyMap[76] ? movingSpeed : 0) + (keyMap[74] ? -movingSpeed : 0);
+                    var y2Dir = (keyMap[75] ? movingSpeed : 0) + (keyMap[73] ? -movingSpeed : 0);
+                    player2X = clamp(x2Dir + player2X, 0, canvasWidth - playerHeight);
+                    player2Y = clamp(y2Dir + player2Y, 0, canvasHeight - playerHeight);
+                    var change2 = hitBuilding(player2X, player2Y, playerHeight, playerHeight, true);
+                    if(change2[0]) {
+                        player2X += change2[1];
+                        player2Y += change2[2];
+                    }
+                    //Player 2 shot direction
+                    if(!player2Lock) {
+                        if(x2Dir > 0) {
+                            player2D = 1;
+                        } else if(x2Dir < 0) {
+                            player2D = 3;
+                        } else if(y2Dir > 0) {
+                            player2D = 2;
+                        } else if(y2Dir < 0) {
+                            player2D = 0;
+                        }
+                    }
+
+
+                    if(keyMap[69]) {
+                        //Player 1 shot
+                        if(player1Cooldown == 0 && player1Ammo > 0) {
+                            var bulletInfo = bulletsInfo.get(player1D);
+                            var bullet = {x: player1X + bulletInfo[0], y: player1Y + bulletInfo[1], d: bulletInfo[2], type: player1Weapon};
+                            bullets.push(bullet);
+                            player1Ammo--;
+
+                            if(player1Weapon == 0) {
+                                player1Cooldown = 32;
+                                var pistolSound = new Audio('./assets/pistol.mp3');
+                                pistolSound.play();
+                            } else if(player1Weapon == 1) {
+                                var bullet2 = {x: player1X + bulletInfo[0], y: player1Y + bulletInfo[1], d: bulletInfo[2] - 5, type: player1Weapon};
+                                var bullet3 = {x: player1X + bulletInfo[0], y: player1Y + bulletInfo[1], d: bulletInfo[2] + 5, type: player1Weapon};
+                                bullets.push(bullet2);
+                                bullets.push(bullet3);
+                                player1Cooldown = 56;
+                                var shotgunSound = new Audio('./assets/shotgun.mp3');
+                                shotgunSound.play();
+                            } else if(player1Weapon == 2) {
+                                player1Cooldown = 4;
+                                var machineGun = new Audio('./assets/lmg.mp3');
+                                machineGun.play();
+                            } else if(player1Weapon == 3) {
+                                player1Cooldown = 64;
+                                var sniper = new Audio('./assets/sniper.mp3');
+                                sniper.play();
+                            } else if(player1Weapon == 4) {
+                                player1Cooldown = 64;
+                                var rpg = new Audio('./assets/rpg.mp3');
+                                rpg.play();
+                            }
+
+                            document.getElementById("ammo1").innerHTML = player1Ammo;
+                        }
+                    }
+                    if(player1Cooldown > 0) {
+                        player1Cooldown--;
+                    }
+
+                    if(keyMap[85]) {
+                        //Player 2 shot
+                        if(player2Cooldown == 0 && player2Ammo > 0) {
+                            var bulletInfo = bulletsInfo.get(player2D);
+                            var bullet = {x: player2X + bulletInfo[0], y: player2Y + bulletInfo[1], d: bulletInfo[2], type: player2Weapon};
+                            bullets.push(bullet);
+                            player2Ammo--;
+
+                            if(player2Weapon == 0) {
+                                player2Cooldown = 32;
+                                var pistolSound = new Audio('./assets/pistol.mp3');
+                                pistolSound.play();
+                            } else if(player2Weapon == 1) {
+                                var bullet2 = {x: player2X + bulletInfo[0], y: player2Y + bulletInfo[1], d: bulletInfo[2] - 5, type: player2Weapon};
+                                var bullet3 = {x: player2X + bulletInfo[0], y: player2Y + bulletInfo[1], d: bulletInfo[2] + 5, type: player2Weapon};
+                                bullets.push(bullet2);
+                                bullets.push(bullet3);
+                                player2Cooldown = 56;
+                                var shotgunSound = new Audio('./assets/shotgun.mp3');
+                                shotgunSound.play();
+                            } else if(player2Weapon == 2) {
+                                player2Cooldown = 4;
+                                var machineGun = new Audio('./assets/lmg.mp3');
+                                machineGun.play();
+                            } else if(player2Weapon == 3) {
+                                player2Cooldown = 64;
+                                var sniper = new Audio('./assets/sniper.mp3');
+                                sniper.play();
+                            } else if(player2Weapon == 4) {
+                                player2Cooldown = 64;
+                                var rpg = new Audio('./assets/rpg.mp3');
+                                rpg.play();
+                            }
+
+                            document.getElementById("ammo2").innerHTML = player2Ammo;
+                        }
+                    }
+                    if(player2Cooldown > 0) {
+                        player2Cooldown--;
+                    }
+                    
+                    drawTerrain();
+                    drawDestructibles();
+
+                    drawSprites();
+
+                    generateGunsAndItems();
+                    drawGuns();
+                    drawItems();
+
+                    drawPlayers();
+
+                    drawBullets();
+
+                    checkObjectCollision();
+
+                    checkGameOver();
+
+                    previousTimeMs = currentTimeMs;
+                }
+                tick();
+            });
+        }
+        tick();
+    </script>
+</html> 
