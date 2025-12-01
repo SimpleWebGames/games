@@ -389,6 +389,8 @@
         var playerMoney = 2000;
         var playerBet = 0;
 
+        var clickSound = new Audio('./assets/click.mp3');
+
         function randomInt(max) {
             return Math.floor(Math.random() * max);
         }
@@ -423,11 +425,6 @@
             setTimeout(() => {
                 endingBox.style.visibility = "hidden";
             }, 3500);
-        }
-
-        function clickSound() {
-            var clickSound = new Audio('./assets/click.mp3');
-            clickSound.play();
         }
 
         function generateCardDeck() {
@@ -695,7 +692,7 @@
             chip10000.disabled = true;
             document.getElementById("bet").disabled = true;
 
-            clickSound();
+            clickSound.play();
 
             initialize();
 
@@ -874,7 +871,7 @@
         document.getElementById("stand").addEventListener("click", function() {
             disableButtons();
 
-            clickSound();
+            clickSound.play();
 
             if(playerDeck2.length != 0) {
                 if(selectedDeck == 0 && !checkBust(playerDeck2)) {
@@ -900,7 +897,7 @@
         document.getElementById("hit").addEventListener("click", function() {
             disableButtons();
 
-            clickSound();
+            clickSound.play();
 
             if(selectedDeck == 0) {
                 addCardToPlayer(0);
@@ -941,7 +938,7 @@
             if(playerMoney >= playerBet) {
                 disableButtons();
 
-                clickSound();
+                clickSound.play();
 
                 playerMoney -= playerBet;
                 playerBet += playerBet;
@@ -969,7 +966,7 @@
             if(playerMoney >= playerBet) {
                 disableButtons();
 
-                clickSound();
+                clickSound.play();
 
                 playerMoney -= playerBet;
                 playerMoneyDiv.innerHTML = playerMoney;
@@ -1040,4 +1037,5 @@
     </script>
 
 </html> 
+
 
