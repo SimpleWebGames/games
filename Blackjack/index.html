@@ -377,6 +377,7 @@
         //Card: SUIT|RANK|PACK
         var deck = [];
         var packCount = 6;
+        var images = [];
 
         var dealerDeck = [];
         var playerDeck = [];
@@ -396,6 +397,18 @@
             var new1 = array[0] > 21 ? -1 : array[0];
             var new2 = array[1] > 21 ? -1 : array[1];
             return Math.max(new1, new2);
+        }
+
+        function preloadImages() {
+            for(var j = 0; j < 4; j++) {
+                for(var k = 0; k < 13; k++) {
+                    var correctedRank = k + 2;
+                    var image = new Image();
+                    image.src = "./assets/" + correctedRank.toString() + j.toString() + ".png";
+                    var imageObject = {id: j + "|" + k, img: image};
+                    images.push(imageObject);
+                }
+            }
         }
 
         function displayMessage(message) {
@@ -1022,6 +1035,9 @@
             playerDeck2 = [];
             selectedDeck = 0;
         }
+
+        preloadImages();
     </script>
 
 </html> 
+
