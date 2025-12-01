@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Blackjack</title>
+        <meta charset="utf8"/>
+        <style>
+            @font-face {
+                font-family: Inter;
+                src: url(../assets/inter_default.ttf) format("truetype");
+            }
+            html, body {
+                height: 100%;
+                width: 100%;
+                margin: 0px;
+                background-color: black;
+            }
+            p {
+                font-family: 'Inter';
+                font-size: 24px;
+                color: white;
+                margin: 0px;
+            }
+            #container {
+                height: 100%;
+                width: 100%;
+                text-align: center;
+            }
+            #uiContainer {
+                position: relative;
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                height: 110px;
+                align-items: center;
+                background-image: url("./assets/wood.jpg");
+                background-color: #84240C;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: cover;
+                z-index: 1;
+            }
+            .playerStat {
+                display: flex;
+                justify-content: center;
+                height: 60px;
+                min-width: 200px;
+                line-height: 60px;
+                padding-left: 10px;
+                padding-right: 10px;
+                margin-left: 20px;
+                margin-right: 20px;
+                background-color: black;
+                border-radius: 20px;
+                border-style: solid;
+                border-width: 2px;
+                border-color: goldenrod;
+            }
+            #moreRules {
+                color: #1c0803;
+                font-weight: bold;
+            }
+            #endingBox {
+                position: absolute;
+                top: calc(50%);
+                left: 0;
+                right: 0;
+                width: fit-content;
+                height: 80px;
+                margin-inline: auto;
+                padding-left: 30px;
+                padding-right: 30px;
+                background-color: black;
+                border-radius: 16px;
+                border-style: solid;
+                border-width: 2px;
+                border-color: goldenrod;
+                opacity: 0;
+                transition: all 300ms;
+                box-shadow: 0 12px 12px 0 rgba(0, 0, 0, 0.4);
+                z-index: 2;
+            }
+            #endingText {
+                font-size: 52px;
+                line-height: 80px;
+                -webkit-text-stroke: 2px goldenrod;
+            }
+            #chipAnimator {
+                position: absolute;
+
+                top: calc(100% - 270px);
+                left: 70%;
+                width: 100px;
+                height: 100px;
+                margin: auto;
+                z-index: 0;
+                display: inline;
+            }
+            .fakeChip {
+                position: absolute;
+
+                width: 64px;
+                height: 64px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+
+                font-family: 'Inter';
+                font-size: 16px;
+                color: white;
+                border-radius: 50%;
+                border-style: dashed;
+                border-width: 8px;
+                border-color: white;
+                box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.3);
+            }
+            .cardImg {
+                margin-left: 5px; 
+                margin-right: 5px;
+                transition: transform 400ms;
+                border-radius: 10%/7%;
+            }
+            #gameContainer {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                height: calc(100% - 280px);
+            }
+            #decks {
+                width: 100%;
+                height: 100%;
+
+                background-image: url("./assets/mat.jpg");
+                background-color: green;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: cover;
+            }
+            .deckPacks {
+                display: flex;
+                flex-direction: row;
+                width: 100%;
+                height: calc(50% - 30px);
+            }
+            #ruleBox {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 100%;
+                height: 60px;
+                color: #8FFFB8;
+            }
+            .deckWithValue {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                align-items: center;
+            }
+            .cardDeck {
+                flex: 1;
+                display: flex;
+                align-items: center;
+            }
+            .cardDeckValue {
+                height: 40px;
+                width: 90px;
+                margin-top: 5px;
+                margin-bottom: 5px;
+                line-height: 40px;
+                background-color: black;
+                border-radius: 20px;
+                border-style: solid;
+                border-width: 2px;
+                border-color: goldenrod;
+            }
+            #uiContainer2 {
+                position: relative;
+                background-image: url("./assets/wood.jpg");
+                background-color: #84240C;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-size: cover;
+                z-index: 1;
+            }
+            #actionContainer {
+                width: 100%;
+                height: 70px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .actionButton {
+                height: 50px;
+                width: 150px;
+                margin: 10px;
+                font-family: 'Inter';
+                font-size: 24px;
+                color: white;
+                border-radius: 10px;
+                border-width: 0px;
+                box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.3);
+            }
+            #stand {
+                background-color: #E9152D;
+            }
+            #stand[disabled] {
+                background-color: #F9B9C0;
+            }
+            #hit {
+                background-color: #008932;
+            }
+            #hit[disabled] {
+                background-color: #8FFFB8;
+            }
+            #double {
+                background-color: #007BFF;
+            }
+            #double[disabled] {
+                background-color: #B3D7FF;
+            }
+            #split {
+                background-color: #FFCC00;
+            }
+            #split[disabled] {
+                background-color: #FFF0B3;
+            }
+            #chipContainer {
+                width: 100%;
+                height: 100px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .chip {
+                width: 80px;
+                height: 80px;
+                margin: 10px;
+                font-family: 'Inter';
+                font-size: 16px;
+                color: white;
+                border-radius: 50%;
+                border-style: dashed;
+                border-width: 8px;
+                border-color: white;
+                box-shadow: 0 8px 8px 0 rgba(0, 0, 0, 0.3);
+            }
+            #bet {
+                height: 50px;
+                width: 150px;
+                margin: 10px;
+                font-family: 'Inter';
+                font-size: 24px;
+                color: white;
+                background-color: black;
+                border-radius: 10px;
+                border-width: 2px;
+                border-color: goldenrod;
+            }
+            .chip10 {
+                background-color: #E9152D;
+            }
+            .chip50 {
+                background-color: #008932;
+            }
+            .chip100 {
+                background-color: black;
+            }
+            .chip200 {
+                background-color: #FFCC00;
+            }
+            .chip500 {
+                background-color: #CB30E0;
+            }
+            .chip1000 {
+                background-color: #C55300;
+            }
+            .chip10000 {
+                background-color: #007BFF;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="container">
+            <div id="uiContainer">
+                <div class="playerStat">
+                    <p>Current bet:&nbsp;</p>
+                    <p id="currentBet">0</p>
+                </div>
+                <div class="playerStat">
+                    <p>Money:&nbsp;</p>
+                    <p id="money">2000</p>
+                </div>
+                <p id="moreRules">Split only once; No doubling down after splitting; Can draw more than one card after splitting aces</p>
+            </div>
+            <div id="endingBox" style="visibility: hidden;">
+                <p id="endingText"></p>
+            </div>
+            <div id="chipAnimator"></div>
+            <div id="gameContainer">
+                <div id="decks">
+                    <div class="deckPacks">
+                        <div class="deckWithValue">
+                            <div id="dealerCardDeck" class="cardDeck"></div>
+                            <p id="dealerDeckValue" class="cardDeckValue">0</p>
+                        </div>
+                    </div>
+                    <p id="ruleBox">Blackjack pays 3 to 2; Dealer stands on soft 17; No insurance</p>
+                    <div class="deckPacks">
+                        <div id="deck1" class="deckWithValue">
+                            <div id="playerCardDeck" class="cardDeck"></div>
+                            <p id="playerDeckValue" class="cardDeckValue">0</p>
+                        </div>
+                        <div id="deck2" class="deckWithValue" style="display: none">
+                            <div id="playerCardDeck2" class="cardDeck"></div>
+                            <p id="playerDeck2Value" class="cardDeckValue">0</p>
+                        </div>   
+                    </div>
+                </div>
+            </div>
+            <div id="uiContainer2">
+                <div id="actionContainer">
+                <button id="stand" class="actionButton" disabled="true">Stand</button>
+                <button id="hit" class="actionButton" disabled="true">Hit</button>
+                <button id="double" class="actionButton" disabled="true">Double</button>
+                <button id="split" class="actionButton" disabled="true">Split</button>
+                </div>
+                <div id="chipContainer">
+                    <button id="chip10" class="chip chip10">10</button>
+                    <button id="chip50" class="chip chip50">50</button>
+                    <button id="chip100" class="chip chip100">100</button>
+                    <button id="chip200" class="chip chip200">200</button>
+                    <button id="chip500" class="chip chip500">500</button>
+                    <button id="chip1000" class="chip chip1000">1000</button>
+                    <button id="chip10000" class="chip chip10000">10000</button>
+                    <button id="bet" disabled="true">Bet</button>
+                </div>
+            </div>
+        </div>
+    </body>
+    <script>
+        var mainContainer = document.getElementById("container");
+        var gameContainer = document.getElementById("gameContainer");
+
+        var playerMoneyDiv = document.getElementById("money");
+        var playerBetDiv = document.getElementById("currentBet");
+
+        var dealerCardDiv = document.getElementById("dealerCardDeck");
+        var playerCardDiv = document.getElementById("playerCardDeck");
+        var playerCardDiv2 = document.getElementById("playerCardDeck2");
+        var playerDeckDiv = document.getElementById("deck1");
+        var playerDeckDiv2 = document.getElementById("deck2");
+
+        var dealerValueTag = document.getElementById("dealerDeckValue");
+        var playerValueTag = document.getElementById("playerDeckValue");
+        var player2ValueTag = document.getElementById("playerDeck2Value");
+
+        var endingBox = document.getElementById("endingBox");
+        var endingText = document.getElementById("endingText");
+
+        var chipAnimator = document.getElementById("chipAnimator");
+
+        var chip10 = document.getElementById("chip10");
+        var chip50 = document.getElementById("chip50");
+        var chip100 = document.getElementById("chip100");
+        var chip200 = document.getElementById("chip200");
+        var chip500 = document.getElementById("chip500");
+        var chip1000 = document.getElementById("chip1000");
+        var chip10000 = document.getElementById("chip10000");
+
+        chip10.addEventListener("click", addChip);
+        chip50.addEventListener("click", addChip);
+        chip100.addEventListener("click", addChip);
+        chip200.addEventListener("click", addChip);
+        chip500.addEventListener("click", addChip);
+        chip1000.addEventListener("click", addChip);
+        chip10000.addEventListener("click", addChip);
+
+        //Card: SUIT|RANK|PACK
+        var deck = [];
+        var packCount = 6;
+
+        var dealerDeck = [];
+        var playerDeck = [];
+        var playerDeck2 = [];
+        var selectedDeck = 0;
+
+        var roundCounter = 0;
+
+        var playerMoney = 2000;
+        var playerBet = 0;
+
+        function randomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
+        function clamp(array) {
+            var new1 = array[0] > 21 ? -1 : array[0];
+            var new2 = array[1] > 21 ? -1 : array[1];
+            return Math.max(new1, new2);
+        }
+
+        function displayMessage(message) {
+            endingBox.style.visibility = "visible";
+            endingBox.style.opacity = 1;
+            endingText.innerHTML = message;
+
+            setTimeout(() => {
+                endingBox.style.opacity = 0;
+            }, 3200);
+
+            setTimeout(() => {
+                endingBox.style.visibility = "hidden";
+            }, 3500);
+        }
+
+        function clickSound() {
+            var clickSound = new Audio('./assets/click.mp3');
+            clickSound.play();
+        }
+
+        function generateCardDeck() {
+            for(var i = 0; i < packCount; i++) {
+                for(var j = 0; j < 4; j++) {
+                    for(var k = 0; k < 13; k++) {
+                        var card = j + "|" + k + "|" + i;
+                        deck.push(card);
+                    }
+                }
+            }
+        }
+
+        function shuffleCardDeck() {
+            var currentIndex = deck.length;
+            while(currentIndex != 0) {
+                var randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [deck[currentIndex], deck[randomIndex]] = [deck[randomIndex], deck[currentIndex]];
+            }
+        }
+
+        function getNewDeck() {
+            deck = [];
+
+            generateCardDeck();
+            shuffleCardDeck();
+        }
+
+        function computeDeckValue(deck) {
+            var value0 = 0;
+            var value1 = 0;
+
+            for(var i = 0; i < deck.length; i++) {
+                var cardRank = deck[i].split("|")[1];
+                if(cardRank == 12) {
+                    //Ace drawn (ace is worth 11 only if it doesn't lead to a bust)
+                    if(value0 + 11 > 21) {
+                        value0 += 1;
+                    } else {
+                        value0 += 11;
+                    }
+                    value1 += 1;
+                } else if(cardRank >= 8) {
+                    //10 to King drawn
+                    value0 += 10;
+                    value1 += 10;
+                } else {
+                    //Other card drawn
+                    var realValue = parseInt(cardRank) + 2;
+                    value0 += realValue;
+                    value1 += realValue;
+                }
+            }
+
+            if(value0 == value1 || value0 > 21) {
+                return [value1, -1];
+            } else {
+                return [value0, value1];
+            }
+        }
+
+        function updateTag(deck, type) {
+            var deckValue = computeDeckValue(deck);
+
+            var value;
+            if(deckValue[1] == -1) {
+                value = deckValue[0];
+            } else {
+                value = deckValue[0] + " / " + deckValue[1];
+            }
+            
+            if(type == -1) {
+                var dealerValue;
+                var cardRank = deck[0].split("|")[1];
+                if(cardRank == 12) {
+                    //Ace drawn (ace is worth 11 only if it doesn't lead to a bust)
+                    dealerValue = 11;
+                } else if(cardRank >= 8) {
+                    //10 to King drawn
+                    dealerValue = 10;
+                } else {
+                    //Other card drawn
+                    dealerValue = parseInt(cardRank) + 2;
+                }
+                dealerValueTag.innerHTML = dealerValue;
+            } else if(type == 0) {
+                dealerValueTag.innerHTML = value;
+            } else if(type == 1) {
+                playerValueTag.innerHTML = value;
+            } else if(type == 2) {
+                player2ValueTag.innerHTML = value;
+            }
+        }
+
+        function getCard() {
+            if(deck.length == 0) {
+                getNewDeck();
+            }
+            return deck.pop();
+        }
+
+        function getCardSVG(card) {
+            var cardData = card.split("|");
+            var correctedRank = parseInt(cardData[1]) + 2;
+            return correctedRank + "" + cardData[0] + ".svg";
+        }
+
+        function getCardName(card) {
+            var cardNameArray = [];
+            var cardData = card.split("|");
+            switch(parseInt(cardData[1])) {
+                case 0:
+                    cardNameArray.push("2");
+                    break;
+                case 1:
+                    cardNameArray.push("3");
+                    break;
+                case 2:
+                    cardNameArray.push("4");
+                    break;
+                case 3:
+                    cardNameArray.push("5");
+                    break;
+                case 4:
+                    cardNameArray.push("6");
+                    break;
+                case 5:
+                    cardNameArray.push("7");
+                    break;
+                case 6:
+                    cardNameArray.push("8");
+                    break;
+                case 7:
+                    cardNameArray.push("9");
+                    break;
+                case 8:
+                    cardNameArray.push("10");
+                    break;
+                case 9:
+                    cardNameArray.push("Jack");
+                    break;
+                case 10:
+                    cardNameArray.push("Queen");
+                    break;
+                case 11:
+                    cardNameArray.push("King");
+                    break;
+                case 12:
+                    cardNameArray.push("Ace");
+                    break;
+                default:
+                    break;
+            }
+
+            cardNameArray.push("of");
+
+            switch(parseInt(cardData[0])) {
+                case 0:
+                    cardNameArray.push("Clubs");
+                    break;
+                case 1:
+                    cardNameArray.push("Diamonds");
+                    break;
+                case 2:
+                    cardNameArray.push("Hearts");
+                    break;
+                case 3:
+                    cardNameArray.push("Spades");
+                    break;
+                default:
+                    break;
+            }
+
+            return cardNameArray.join(" ");
+        }
+
+        function redrawDecks(deck, type) {
+            if(type == 0) {
+                dealerCardDiv.replaceChildren();
+            } else if(type == 1) {
+                playerCardDiv.replaceChildren();
+            } else if(type == 2) {
+                playerCardDiv2.replaceChildren();
+            }
+            for(var i = 0; i < deck.length; i++) {
+                var cardPath = "./assets/" + getCardSVG(deck[i]);
+                var cardImg = document.createElement("img");
+                var cardHeight = 0.9 * dealerCardDiv.clientHeight;
+                cardImg.setAttribute('src', cardPath);
+                cardImg.setAttribute("height", cardHeight);
+                cardImg.setAttribute("aspect-ratio", "0.714");
+                cardImg.setAttribute("class", "cardImg");
+                cardImg.setAttribute("alt", getCardName(deck[i]));
+                if(type == 0) {
+                    dealerCardDiv.append(cardImg);
+                } else if(type == 1) {
+                    playerCardDiv.append(cardImg);
+                } else if(type == 2) {
+                    playerCardDiv2.append(cardImg);
+                }
+            }
+        }
+
+        function addCardToTable(card, player, hidden) {
+            var cardPath = "./assets/" + getCardSVG(card);
+            var cardImg = document.createElement("img");
+            var cardHeight = 0.9 * dealerCardDiv.clientHeight;
+            cardImg.setAttribute("src", cardPath);
+            cardImg.setAttribute("height", cardHeight);
+            cardImg.setAttribute("aspect-ratio", "0.714");
+            cardImg.setAttribute("class", "cardImg");
+            cardImg.setAttribute("alt", getCardName(card));
+            
+            if(hidden) {
+                var hiddenCardImg = document.createElement("img");
+                hiddenCardImg.setAttribute("src", "./assets/back.png");
+                hiddenCardImg.setAttribute("height", cardHeight);
+                hiddenCardImg.setAttribute("aspect-ratio", "0.714");
+                hiddenCardImg.setAttribute("class", "cardImg");
+                hiddenCardImg.setAttribute("alt", "Hidden card");
+                dealerCardDiv.append(hiddenCardImg);
+            } else if(player == 0) {
+                dealerCardDiv.append(cardImg);
+            } else if(player == 1) {
+                playerCardDiv.append(cardImg);
+            } else if(player == 2) {
+                playerCardDiv2.append(cardImg);
+            }
+        }
+
+        function addCardToDealer() {
+            var card = getCard();
+            dealerDeck.push(card);
+
+            if(dealerDeck.length == 2) {
+                addCardToTable(card, 0, true);
+                updateTag(dealerDeck, -1);
+            } else {
+                addCardToTable(card, 0, false);
+                updateTag(dealerDeck, 0);
+            }
+        }
+
+        function addCardToPlayer(type) {
+            var card = getCard();
+            if(type == 0) {
+                playerDeck.push(card);
+                addCardToTable(card, 1, false);
+                updateTag(playerDeck, 1);
+            } else {
+                playerDeck2.push(card);
+                addCardToTable(card, 2, false);
+                updateTag(playerDeck2, 2);
+            }
+        }
+
+        document.getElementById("bet").addEventListener("click", function() {
+            chip10.disabled = true;
+            chip50.disabled = true;
+            chip100.disabled = true;
+            chip200.disabled = true;
+            chip500.disabled = true;
+            chip1000.disabled = true;
+            chip10000.disabled = true;
+            document.getElementById("bet").disabled = true;
+
+            clickSound();
+
+            initialize();
+
+            startRound();
+
+            checkBlackjack();
+        })
+
+        function addChip(event) {
+            var chipValue = parseInt(event.target.id.slice(4));
+            if(chipValue <= playerMoney) {
+                playerMoney -= chipValue;
+                playerBet += chipValue;
+
+                playerMoneyDiv.innerHTML = playerMoney;
+                playerBetDiv.innerHTML = playerBet;
+
+                var chipsBet = new Audio('./assets/chipsBet.mp3');
+                chipsBet.play();
+
+                var chipIcon = document.createElement("div");
+                var randomX = randomInt(20);
+                var randomY = randomInt(20);
+                chipIcon.setAttribute("class", "fakeChip " + "chip" + chipValue);
+                chipIcon.style.top = randomY + "px";
+                chipIcon.style.left = randomX + "px";
+                chipIcon.innerHTML = chipValue;
+                chipAnimator.append(chipIcon);
+
+                document.getElementById("bet").disabled = false;
+            }
+        }
+
+        function animateWin() {
+            var winChip = chipAnimator.cloneNode(true);
+            mainContainer.append(winChip);
+
+            winChip.style.top = "0px";
+            winChip.style.transition = "1000ms cubic-bezier(0.215, 0.610, 0.355, 1.000)";
+            winChip.style.transform = "translate(0px, " + (gameContainer.clientHeight + 110) + "px)";
+
+            chipAnimator.style.transition = "500ms cubic-bezier(0.215, 0.610, 0.355, 1.000)";
+            chipAnimator.style.transitionDelay = "400ms";
+            chipAnimator.style.transform = "translate(0px, 110px)";
+
+            setTimeout(() => {
+                mainContainer.removeChild(winChip);
+                chipAnimator.replaceChildren();
+                chipAnimator.style.transition = "none";
+                chipAnimator.style.transitionDelay = "0ms";
+                chipAnimator.style.transform = "none";
+            }, 1500);
+        }
+
+        function animateLoss() {
+            chipAnimator.style.transition = "1000ms cubic-bezier(0.215, 0.610, 0.355, 1.000)";
+            chipAnimator.style.transform = "translate(0px, " + -(gameContainer.clientHeight + 10) + "px)";
+
+            setTimeout(() => {
+                chipAnimator.replaceChildren();
+                chipAnimator.style.transition = "none";
+                chipAnimator.style.transform = "none";
+            }, 1500);
+        }
+
+        function animatePush() {
+            chipAnimator.style.transition = "500ms cubic-bezier(0.215, 0.610, 0.355, 1.000)";
+            chipAnimator.style.transform = "translate(0px, 110px)";
+
+            setTimeout(() => {
+                chipAnimator.replaceChildren();
+                chipAnimator.style.transition = "none";
+                chipAnimator.style.transform = "none";
+            }, 1000);
+        }
+
+        function animateRemoveCards() {
+            var cardImgs = document.getElementsByClassName("cardImg");
+            for(var i = 0; i < cardImgs.length; i++) {
+                cardImgs[i].style.transform = "translate(0px, " + -gameContainer.clientHeight + "px)";
+            }
+        }
+
+        function startRound() {
+            addCardToPlayer(0);
+            addCardToDealer();
+            
+            addCardToPlayer(0);
+            addCardToDealer();
+        }
+
+        function checkBlackjack() {
+            var dealerValue = computeDeckValue(dealerDeck);
+            var playerValue = computeDeckValue(playerDeck);
+
+            if(dealerValue[0] == 21 && playerValue[0] == 21) {
+                //Push
+                displayMessage("Push");
+                animatePush();
+                playerMoney += playerBet;
+                restart();
+            } else if(dealerValue[0] == 21) {
+                //Dealer wins
+                displayMessage("Dealer wins");
+                animateLoss();
+                restart();
+            } else if(playerValue[0] == 21) {
+                //Player wins
+                displayMessage("Blackjack !");
+                animateWin();
+                playerMoney += playerBet;
+                playerMoney += (playerBet * 3) / 2;
+                restart();
+            } else {
+                nextRound();
+            }
+        }
+
+        function nextRound() {
+            roundCounter++;
+            document.getElementById("stand").disabled = false;
+            document.getElementById("hit").disabled = false;
+            if(playerDeck.length <= 2 && playerDeck2.length == 0 && roundCounter == 1) {
+                document.getElementById("double").disabled = false;
+            }
+            if(playerDeck[0].split("|")[1] == playerDeck[1].split("|")[1] && playerDeck2.length == 0 && roundCounter == 1) {
+                document.getElementById("split").disabled = false;
+            }
+        }
+
+        function dealerDraws() {
+            var dealerValue = computeDeckValue(dealerDeck);
+            while(dealerValue[0] < 17) {
+                addCardToDealer();
+                dealerValue = computeDeckValue(dealerDeck);
+            }
+        }
+
+        function checkWins(deck) {
+            var dealerValue = computeDeckValue(dealerDeck);
+            var playerValue = computeDeckValue(deck);
+
+            var dealerBetterValue = clamp(dealerValue);
+            var playerBetterValue = clamp(playerValue);
+
+            if(dealerBetterValue == playerBetterValue) {
+                //Push
+                displayMessage("Push");
+                animatePush();
+                playerMoney += playerBet;
+            } else if(dealerBetterValue > playerBetterValue) {
+                //Dealer wins
+                displayMessage("Dealer wins");
+                animateLoss();
+            } else if(playerBetterValue > dealerBetterValue) {
+                //Player wins
+                displayMessage("You win !");
+                animateWin();
+                playerMoney += (playerBet * 2);
+            }
+        }
+
+        function checkBust(deck) {
+            var deckValue = computeDeckValue(deck);
+            return deckValue[1] == -1 ? (deckValue[0] > 21) : (deckValue[0] > 21 && deckValue[1] > 21);
+        }
+
+        function disableButtons() {
+            document.getElementById("stand").disabled = true;
+            document.getElementById("hit").disabled = true;
+            document.getElementById("double").disabled = true;
+            document.getElementById("split").disabled = true;
+        }
+
+        //Stand
+        document.getElementById("stand").addEventListener("click", function() {
+            disableButtons();
+
+            clickSound();
+
+            if(playerDeck2.length != 0) {
+                if(selectedDeck == 0 && !checkBust(playerDeck2)) {
+                    selectedDeck = 1;
+                    displayMessage("Switching to second deck");
+                    nextRound();
+                } else {
+                    dealerDraws();
+                    if(!checkBust(playerDeck)) {
+                        checkWins(playerDeck);
+                    }
+                    checkWins(playerDeck2);
+                    restart();
+                }
+            } else {
+                dealerDraws();
+                checkWins(playerDeck);
+                restart();
+            }
+        });
+
+        //Hit
+        document.getElementById("hit").addEventListener("click", function() {
+            disableButtons();
+
+            clickSound();
+
+            if(selectedDeck == 0) {
+                addCardToPlayer(0);
+
+                if(checkBust(playerDeck)) {
+                    if(playerDeck2.length != 0 && !checkBust(playerDeck2)) {
+                        selectedDeck = 1;
+                        displayMessage("Bust ! Switching to second deck");
+                        nextRound();
+                    } else {
+                        displayMessage("Bust");
+                        animateLoss();
+                        restart();
+                    }
+                } else {
+                    nextRound();
+                }
+            } else {
+                addCardToPlayer(1);
+                
+                if(checkBust(playerDeck2)) {
+                    if(!checkBust(playerDeck)) {
+                        dealerDraws();
+                        checkWins(playerDeck);
+                    } else {
+                        displayMessage("Bust");
+                        animateLoss();
+                    }
+                    restart();
+                } else {
+                    nextRound();
+                }
+            }
+        });
+
+        //Double
+        document.getElementById("double").addEventListener("click", function() {
+            if(playerMoney >= playerBet) {
+                disableButtons();
+
+                clickSound();
+
+                playerMoney -= playerBet;
+                playerBet += playerBet;
+                playerMoneyDiv.innerHTML = playerMoney;
+                playerBetDiv.innerHTML = playerBet;
+
+                addCardToPlayer(0);
+
+                if(checkBust(playerDeck)) {
+                    displayMessage("Bust");
+                    animateLoss();
+                    restart();
+                } else {
+                    dealerDraws();
+                    checkWins(playerDeck);
+                    restart();
+                }
+            } else {
+                alert("You do not have enough money to double your bet.");
+            }
+        });
+
+        //Split
+        document.getElementById("split").addEventListener("click", function() {
+            if(playerMoney >= playerBet) {
+                disableButtons();
+
+                clickSound();
+
+                playerMoney -= playerBet;
+                playerMoneyDiv.innerHTML = playerMoney;
+                playerBetDiv.innerHTML = (playerBet * 2);
+
+                //Create new deck
+                playerDeckDiv2.style.display = "flex";
+                playerDeck2.push(playerDeck.pop());
+
+                //Add card to first deck
+                addCardToPlayer(0);
+
+                //Add card to second deck
+                addCardToPlayer(1);
+
+                redrawDecks(playerDeck, 1)
+                redrawDecks(playerDeck2, 2)
+
+                nextRound();
+            } else {
+                alert("You do not have enough money to split your cards and double your bet.");
+            }
+        });
+
+        function restart() {
+            updateTag(dealerDeck, 0);
+            redrawDecks(dealerDeck, 0);
+
+            setTimeout(() => {
+                animateRemoveCards();
+            }, 3100);
+
+            setTimeout(() => {
+                roundCounter = 0;
+
+                playerBet = 0;
+                playerMoneyDiv.innerHTML = playerMoney;
+                playerBetDiv.innerHTML = playerBet;
+
+                dealerCardDiv.replaceChildren();
+                playerCardDiv.replaceChildren();
+                playerCardDiv2.replaceChildren();
+
+                dealerValueTag.innerHTML = "0";
+                playerValueTag.innerHTML = "0";
+                player2ValueTag.innerHTML = "0";
+
+                playerDeckDiv2.style.display = "none";
+
+                chip10.disabled = false;
+                chip50.disabled = false;
+                chip100.disabled = false;
+                chip200.disabled = false;
+                chip500.disabled = false;
+                chip1000.disabled = false;
+                chip10000.disabled = false;
+            }, 3500);
+        }
+
+        function initialize() {
+            dealerDeck = [];
+            playerDeck = [];
+            playerDeck2 = [];
+            selectedDeck = 0;
+        }
+    </script>
+</html> 
