@@ -517,10 +517,10 @@
             return deck.pop();
         }
 
-        function getCardSVG(card) {
+        function getCardPNG(card) {
             var cardData = card.split("|");
             var correctedRank = parseInt(cardData[1]) + 2;
-            return correctedRank + "" + cardData[0] + ".svg";
+            return correctedRank + "" + cardData[0] + ".png";
         }
 
         function getCardName(card) {
@@ -601,7 +601,7 @@
                 playerCardDiv2.replaceChildren();
             }
             for(var i = 0; i < deck.length; i++) {
-                var cardPath = "./assets/" + getCardSVG(deck[i]);
+                var cardPath = "./assets/" + getCardPNG(deck[i]);
                 var cardImg = document.createElement("img");
                 var cardHeight = 0.9 * dealerCardDiv.clientHeight;
                 cardImg.setAttribute('src', cardPath);
@@ -620,7 +620,7 @@
         }
 
         function addCardToTable(card, player, hidden) {
-            var cardPath = "./assets/" + getCardSVG(card);
+            var cardPath = "./assets/" + getCardPNG(card);
             var cardImg = document.createElement("img");
             var cardHeight = 0.9 * dealerCardDiv.clientHeight;
             cardImg.setAttribute("src", cardPath);
@@ -1023,4 +1023,5 @@
             selectedDeck = 0;
         }
     </script>
+
 </html> 
