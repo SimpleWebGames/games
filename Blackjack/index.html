@@ -616,7 +616,7 @@
             }
             for(var i = 0; i < deck.length; i++) {
                 var cardImg = document.createElement("img");
-                var cardHeight = 0.9 * dealerCardDiv.clientHeight;
+                var cardHeight = Math.min(playerDeckDiv.clientWidth / 4.284, 0.9 * dealerCardDiv.clientHeight);
                 cardImg.setAttribute('src', getCardPNG(deck[i]));
                 cardImg.setAttribute("height", cardHeight);
                 cardImg.setAttribute("aspect-ratio", "0.714");
@@ -634,7 +634,7 @@
 
         function addCardToTable(card, player, hidden) {
             var cardImg = document.createElement("img");
-            var cardHeight = 0.9 * dealerCardDiv.clientHeight;
+            var cardHeight = Math.min(playerDeckDiv.clientWidth / 4.284, 0.9 * dealerCardDiv.clientHeight);
             cardImg.setAttribute("src", getCardPNG(card));
             cardImg.setAttribute("height", cardHeight);
             cardImg.setAttribute("aspect-ratio", "0.714");
@@ -1033,4 +1033,4 @@
 
         preloadImages();
     </script>
-</html> 
+</html>
