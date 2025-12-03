@@ -389,7 +389,9 @@
         var playerMoney = 2000;
         var playerBet = 0;
 
-        var clickSound = new Audio('./assets/click.mp3');
+        var cardSwoosh = new Audio('./assets/cardSwoosh.mp3');
+
+        const timer = ms => new Promise(res => setTimeout(res, ms));
 
         function randomInt(max) {
             return Math.floor(Math.random() * max);
@@ -529,8 +531,10 @@
 
         function getCardPNG(card) {
             var cardData = card.split("|");
-            var correctedRank = parseInt(cardData[1]) + 2;
-            return correctedRank + "" + cardData[0] + ".png";
+            var rank = parseInt(cardData[1]);
+            var suit = parseInt(cardData[0]);
+            var index = rank + (13 * suit);
+            return images[index].img.src;
         }
 
         function getCardName(card) {
@@ -611,10 +615,9 @@
                 playerCardDiv2.replaceChildren();
             }
             for(var i = 0; i < deck.length; i++) {
-                var cardPath = "./assets/" + getCardPNG(deck[i]);
                 var cardImg = document.createElement("img");
                 var cardHeight = 0.9 * dealerCardDiv.clientHeight;
-                cardImg.setAttribute('src', cardPath);
+                cardImg.setAttribute('src', getCardPNG(deck[i]));
                 cardImg.setAttribute("height", cardHeight);
                 cardImg.setAttribute("aspect-ratio", "0.714");
                 cardImg.setAttribute("class", "cardImg");
@@ -630,10 +633,9 @@
         }
 
         function addCardToTable(card, player, hidden) {
-            var cardPath = "./assets/" + getCardPNG(card);
             var cardImg = document.createElement("img");
             var cardHeight = 0.9 * dealerCardDiv.clientHeight;
-            cardImg.setAttribute("src", cardPath);
+            cardImg.setAttribute("src", getCardPNG(card));
             cardImg.setAttribute("height", cardHeight);
             cardImg.setAttribute("aspect-ratio", "0.714");
             cardImg.setAttribute("class", "cardImg");
@@ -654,12 +656,13 @@
             } else if(player == 2) {
                 playerCardDiv2.append(cardImg);
             }
+
+            cardSwoosh.play();
         }
 
         function addCardToDealer() {
             var card = getCard();
             dealerDeck.push(card);
-
             if(dealerDeck.length == 2) {
                 addCardToTable(card, 0, true);
                 updateTag(dealerDeck, -1);
@@ -682,7 +685,7 @@
             }
         }
 
-        document.getElementById("bet").addEventListener("click", function() {
+        document.getElementById("bet").addEventListener("click", async function() {
             chip10.disabled = true;
             chip50.disabled = true;
             chip100.disabled = true;
@@ -691,8 +694,6 @@
             chip1000.disabled = true;
             chip10000.disabled = true;
             document.getElementById("bet").disabled = true;
-
-            clickSound.play();
 
             initialize();
 
@@ -823,9 +824,14 @@
             }
         }
 
-        function dealerDraws() {
+        async function dealerDraws() {
+            updateTag(dealerDeck, 0);
+            redrawDecks(dealerDeck, 0);
+            cardSwoosh.play();
+
             var dealerValue = computeDeckValue(dealerDeck);
             while(dealerValue[0] < 17) {
+                await timer(900);
                 addCardToDealer();
                 dealerValue = computeDeckValue(dealerDeck);
             }
@@ -868,10 +874,8 @@
         }
 
         //Stand
-        document.getElementById("stand").addEventListener("click", function() {
+        document.getElementById("stand").addEventListener("click", async function() {
             disableButtons();
-
-            clickSound.play();
 
             if(playerDeck2.length != 0) {
                 if(selectedDeck == 0 && !checkBust(playerDeck2)) {
@@ -879,7 +883,7 @@
                     displayMessage("Switching to second deck");
                     nextRound();
                 } else {
-                    dealerDraws();
+                    await dealerDraws();
                     if(!checkBust(playerDeck)) {
                         checkWins(playerDeck);
                     }
@@ -887,17 +891,15 @@
                     restart();
                 }
             } else {
-                dealerDraws();
+                await dealerDraws();
                 checkWins(playerDeck);
                 restart();
             }
         });
 
         //Hit
-        document.getElementById("hit").addEventListener("click", function() {
+        document.getElementById("hit").addEventListener("click", async function() {
             disableButtons();
-
-            clickSound.play();
 
             if(selectedDeck == 0) {
                 addCardToPlayer(0);
@@ -920,7 +922,7 @@
                 
                 if(checkBust(playerDeck2)) {
                     if(!checkBust(playerDeck)) {
-                        dealerDraws();
+                        await dealerDraws();
                         checkWins(playerDeck);
                     } else {
                         displayMessage("Bust");
@@ -934,11 +936,9 @@
         });
 
         //Double
-        document.getElementById("double").addEventListener("click", function() {
+        document.getElementById("double").addEventListener("click", async function() {
             if(playerMoney >= playerBet) {
                 disableButtons();
-
-                clickSound.play();
 
                 playerMoney -= playerBet;
                 playerBet += playerBet;
@@ -952,7 +952,7 @@
                     animateLoss();
                     restart();
                 } else {
-                    dealerDraws();
+                    await dealerDraws();
                     checkWins(playerDeck);
                     restart();
                 }
@@ -965,8 +965,6 @@
         document.getElementById("split").addEventListener("click", function() {
             if(playerMoney >= playerBet) {
                 disableButtons();
-
-                clickSound.play();
 
                 playerMoney -= playerBet;
                 playerMoneyDiv.innerHTML = playerMoney;
@@ -1035,7 +1033,4 @@
 
         preloadImages();
     </script>
-
 </html> 
-
-
